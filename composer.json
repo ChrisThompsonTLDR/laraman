@@ -1,0 +1,27 @@
+{
+    "name": "christhompsontldr/laraman",
+    "description": "Laravel crud manager.",
+    "authors": [
+        {
+            "name": "Chris Thompson",
+            "email": "christhompsontldr@gmail.com",
+            "homepage": "https://christhompsontldr.com"
+        }
+    ],
+    "keywords": ["laravel","admin","manager"],
+    "support": {
+        "issues": "https://github.com/christhompsontldr/laraman/issues",
+        "source": "https://github.com/christhompsontldr/laraman"
+    },
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Christhompsontldr\\Laraman\\": "src/"
+        }
+    },
+    "license": "MIT",
+    "type": "project",
+    "require": {
+        "laravelcollective/html": "^5.3.0"
+    }
+}
