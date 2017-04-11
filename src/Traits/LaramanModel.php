@@ -67,6 +67,10 @@ trait LaramanModel
         $row     = isset($params['row']) ? $params['row'] : null;
         $options = isset($params['options']) ? $params['options'] : null;
 
+        if (empty($value->timestamp) || $value->timestamp < 1) {
+            return isset($options['empty']) ? $options['empty'] : '';
+        }
+
         //  no options set
         if (empty($options)) { return $value; }
 
