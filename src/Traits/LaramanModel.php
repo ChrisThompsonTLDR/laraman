@@ -15,8 +15,14 @@ trait LaramanModel
     {
         $relation = $this->$relation_name();
         $table = $relation->getRelated()->getTable();
-        $one = $relation->getQualifiedParentKeyName();
-        $two = $relation->getForeignKey();
+
+        if (get_class($relation) == 'Illuminate\Database\Eloquent\Relations\HasOne') {
+            $left = $relation->getQualifiedParentKeyName();
+            $right = $relation->getExistenceCompareKey();
+        } else {
+            $left = $relation->getQualifiedForeignKey();
+            $right = $table . '.'. $relation->getOwnerKey();
+        }
 
         if (empty($query->columns)) {
             $query->select($this->getTable().".*");
@@ -26,7 +32,7 @@ trait LaramanModel
             $query->addSelect(new Expression("`$table`.`$related_column` AS `" . str_singular($table) . ".$related_column`"));
         }
 
-        return $query->join($table, $table . '.' . $relation->getOwnerKey(), $operator, $this->getTable() . '.' . $two, $type, $where);
+        return $query->join($table, $left, $operator, $right, $type, $where);
     }
 
     public static function formatterBoolean ($params)
