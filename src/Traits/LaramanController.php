@@ -123,6 +123,9 @@ trait LaramanController
             list($relatedModel, $rest) = explode('.', $sort);
 
             $builder->modelJoin($relatedModel);
+
+            //  use the appropriate table name
+            $sortField = str_replace($relatedModel . '.', $builder->getModel()->$relatedModel()->getRelated()->getTable() . '.', $sortField);
         }
         //  if sort is on a count field, it's related
         elseif (!in_array($sort, Schema::getColumnListing($builder->getModel()->getTable()))) {
@@ -145,7 +148,7 @@ trait LaramanController
                 $builder->orderByRaw(DB::raw('FIELD(id, ' . implode(', ', $ids)) . ') asc');
             }
         } else {
-            $builder->orderBy(DB::raw('`' . $sortField . '`'), $order);
+            $builder->orderBy(DB::raw($sortField), $order);
         }
 
         $paginator = $builder->paginate($limit);
