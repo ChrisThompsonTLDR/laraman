@@ -90,7 +90,7 @@ trait LaramanController
             $val = urldecode($val);
 
             //  this is modified if using a related model
-            $joinKey = $key;
+            $joinKey = $builder->getModel()->getTable() . '.' . $key;
 
             //  we need a join
             if (str_contains($key, '.')) {
