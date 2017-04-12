@@ -47,7 +47,7 @@
     <div class="row">
         <div class="col col-xs-12">
             @if (!$rows->isEmpty())
-            <table class="table table-bordered">
+            <table class="table">
                 <thead>
                     <tr>
                         @foreach ($columns as $column)
@@ -94,13 +94,19 @@
             </table>
             <div class="row">
                 <div class="col col-xs-2">
-                    <?php /*{!! Form::open(['method' => 'get', 'route' => 'manage.news.index']) !!}
+                    {!! Form::open(['method' => 'get', 'route' => $location . '.index']) !!}
                         @foreach ($params as $key => $val)
                             @if ($key == 'limit') @continue @endif
+                            @if (is_array($val))
+                                @foreach ($val as $childKey => $childVal)
+                                {!! Form::hidden($key . '[' . $childKey . ']', $childVal) !!}
+                                @endforeach
+                            @else
                             {!! Form::hidden($key, $val) !!}
+                            @endif
                         @endforeach
                         {!! Form::select('limit', $limits, $params['limit'], ['class' => 'form-control', 'onchange' => 'this.form.submit()']) !!}
-                    {!! Form::close() !!} */ ?>
+                    {!! Form::close() !!}
                 </div>
                 <div class="col col-xs-10">
                     <div class="pull-right text-center">
