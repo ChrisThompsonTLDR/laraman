@@ -38,6 +38,7 @@
                     @include('laraman::filters.' . $filter->type, compact('filter', 'params'))
                 @endforeach
                 <button type="submit" class="btn btn-info">Filter</button>
+                <a href="{{ route($location . '.index') }}" class="btn btn-danger">Clear</a>
             {!! Form::close() !!}
             </div>
             @endif
