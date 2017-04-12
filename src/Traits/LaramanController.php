@@ -86,32 +86,42 @@ trait LaramanController
 
         //  apply filters first
         $appliedFilters = [];
-        collect($request->all())->each(function ($val, $key) use (&$builder, $filters, &$appliedFilters) {
-            if (starts_with($key, 'filter_')) {
-                $tmpKey = str_replace('filter_', '', $key);
+        collect($request->input('filter'))->each(function ($val, $key) use (&$builder, $filters, &$appliedFilters) {
+            $val = urldecode($val);
 
-                // ranges
-                if (str_contains($val, ':')) {
-                    list($start, $end) = explode(':', $val);
+            //  this is modified if using a related model
+            $joinKey = $key;
 
-                    $start = urldecode($start);
-                    $end   = urldecode($end);
+            //  we need a join
+            if (str_contains($key, '.')) {
+                list($relatedModel, $rest) = explode('.', $key);
 
-                    //  datetime ranges
-                    $filter = $filters->where('field', $tmpKey)->first();
-                    if ($filter && $filter['type'] == 'datetime-range') {
-                        $builder->whereBetween($tmpKey, [Carbon::parse($start)->format('Y-m-d'), Carbon::parse($end)->endOfDay()]);
-                    } else {
-                        $builder->whereBetween($tmpKey, [$start, $end]);
-                    }
+                $joinKey = $builder->getModel()->$relatedModel()->getRelated()->getTable() . '.' . $rest;
 
-                    $appliedFilters[$key . '_start'] = $start;
-                    $appliedFilters[$key . '_end'] = $end;
+                $builder->modelJoin($relatedModel);
+            }
+
+            // ranges
+            if (str_contains($val, ':')) {
+                list($start, $end) = explode(':', $val);
+
+                $start = urldecode($start);
+                $end   = urldecode($end);
+
+                //  datetime ranges
+                $filter = $filters->where('field', $key)->first();
+                if ($filter && $filter['type'] == 'datetime-range') {
+                    $builder->whereBetween($joinKey, [Carbon::parse($start)->format('Y-m-d'), Carbon::parse($end)->endOfDay()]);
+                } else {
+                    $builder->whereBetween($joinKey, [$start, $end]);
                 }
-                elseif ($filters->pluck('field')->contains($tmpKey)) {
-                    $builder->where($tmpKey, $val);
-                    $appliedFilters[$key] = $val;
-                }
+
+                $appliedFilters[$key . '-start'] = $start;
+                $appliedFilters[$key . '-end'] = $end;
+            }
+            elseif ($filters->pluck('field')->contains($key)) {
+                $builder->where($joinKey, $val);
+                $appliedFilters[$key] = $val;
             }
         });
 
@@ -257,7 +267,7 @@ trait LaramanController
             return $filter;
         });
 
-        $params = array_merge(compact('sort', 'limit', 'page', 'order'), $appliedFilters);
+        $params = array_merge(compact('sort', 'limit', 'page', 'order'), ['filter' => $appliedFilters]);
         if ($this->searchEnabled && !empty($search)) {
             $params['search'] = $search;
         }
@@ -459,14 +469,16 @@ trait LaramanController
         //  sort and order not allowed
         $params = $request->only([/*'sort', 'order', 'page',*/ 'limit']);
 
+        $submittedFilters = $request->input('filter');
+
         foreach ($this->filters as $filter) {
-            if ($request->has('filter_' . $filter['field'])) {
-                $params['filter_' . $filter['field']] = urlencode($request->input('filter_' . $filter['field']));
-            }
             if (in_array($filter['type'], ['range', 'datetime-range'])) {
-                if ($request->has('filter_' . $filter['field'] . '_start') && $request->has('filter_' . $filter['field'] . '_end')) {
-                    $params['filter_' . $filter['field']] = urlencode($request->input('filter_' . $filter['field'] . '_start')) . ':' . urlencode($request->input('filter_' . $filter['field'] . '_end'));
+                if (isset($submittedFilters[$filter['field'] . '-start']) && isset($submittedFilters[$filter['field'] . '-end'])) {
+                    $params['filter[' . $filter['field'] . ']'] = urlencode($submittedFilters[$filter['field'] . '-start']) . ':' . urlencode($submittedFilters[$filter['field'] . '-end']);
                 }
+            }
+            elseif (isset($submittedFilters[$filter['field']])) {
+                $params['filter[' . $filter['field'] . ']'] = urlencode($submittedFilters[$filter['field']]);
             }
         }
 

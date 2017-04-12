@@ -93,13 +93,13 @@
             </table>
             <div class="row">
                 <div class="col col-xs-2">
-                    {!! Form::open(['method' => 'get', 'route' => 'manage.news.index']) !!}
+                    <?php /*{!! Form::open(['method' => 'get', 'route' => 'manage.news.index']) !!}
                         @foreach ($params as $key => $val)
                             @if ($key == 'limit') @continue @endif
                             {!! Form::hidden($key, $val) !!}
                         @endforeach
                         {!! Form::select('limit', $limits, $params['limit'], ['class' => 'form-control', 'onchange' => 'this.form.submit()']) !!}
-                    {!! Form::close() !!}
+                    {!! Form::close() !!} */ ?>
                 </div>
                 <div class="col col-xs-10">
                     <div class="pull-right text-center">
