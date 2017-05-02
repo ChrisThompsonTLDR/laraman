@@ -35,7 +35,7 @@ trait LaramanModel
         return $query->join($table, $left, $operator, $right, $type, $where);
     }
 
-    public static function formatterBoolean ($params)
+    public static function formatterBoolean($params)
     {
         $value   = isset($params['value']) ? $params['value'] : null;
         $column  = isset($params['column']) ? $params['column'] : null;
@@ -66,7 +66,7 @@ trait LaramanModel
         return $row->{$column['field']}->count();
     }
 
-    public static function formatterDatetime ($params)
+    public static function formatterDatetime($params)
     {
         $value   = isset($params['value']) ? $params['value'] : null;
         $column  = isset($params['column']) ? $params['column'] : null;
@@ -87,7 +87,7 @@ trait LaramanModel
         return e($value);
     }
 
-    public static function formatterRelated ($params)
+    public static function formatterRelated($params)
     {
         $value   = isset($params['value']) ? $params['value'] : null;
         $column  = isset($params['column']) ? $params['column'] : null;
