@@ -21,7 +21,7 @@ trait LaramanModel
             $right = $relation->getExistenceCompareKey();
         } else {
             $left = $relation->getQualifiedForeignKey();
-            $right = $table . '.'. $relation->getOwnerKey();
+            $right = $table . '.'. $relation->getRelated()->getKeyName();
         }
 
         if (empty($query->columns)) {
