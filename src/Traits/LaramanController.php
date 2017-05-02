@@ -29,7 +29,7 @@ trait LaramanController
     public $buttons = [];
 
     //  show search
-    public $searchEnabled = true;
+    public $searchEnabled = null;
 
     //  filters
     public $filters = [];
@@ -50,6 +50,17 @@ trait LaramanController
 
         //  route location
         $location = config('laraman.route.prefixDot') . $path;
+
+        //  turn on/off searching
+        if ($this->searchEnabled == null) {
+            $traits = class_uses($model);
+
+            if (in_array('Laravel\Scout\Searchable', $traits)) {
+                $this->searchEnabled = true;
+            } else {
+                $this->searchEnabled = false;
+            }
+        }
 
         return [$model, $path, $location];
     }
