@@ -36,24 +36,17 @@ trait LaramanController
 
     public $limits = [10, 25, 50, 100];
 
-    private function prep()
+    public $viewPath;
+
+    private function startup()
     {
         if (empty($this->model)) {
-            $model = 'App\\' . str_singular(str_replace('Controller', '', class_basename($this)));
-            $path  = strtolower(str_singular(str_replace('Controller', '', class_basename($this))));
-        } else {
-            $model = $this->model;
-            $path  = strtolower(str_singular(str_replace('Controller', '', class_basename($this))));
+            $this->model = 'App\\' . str_singular(str_replace('Controller', '', class_basename($this)));
         }
-
-        $path = str_plural($path);
-
-        //  route location
-        $location = config('laraman.route.prefixDot') . $path;
 
         //  turn on/off searching
         if ($this->searchEnabled == null) {
-            $traits = class_uses($model);
+            $traits = class_uses($this->model);
 
             if (in_array('Laravel\Scout\Searchable', $traits)) {
                 $this->searchEnabled = true;
@@ -62,18 +55,38 @@ trait LaramanController
             }
         }
 
-        return [$model, $path, $location];
+        $this->viewPath = 'laraman::' . strtolower(str_plural(class_basename($this->model)));
+    }
+
+    private function prep()
+    {
+        $path = strtolower(str_singular(str_replace('Controller', '', class_basename($this))));
+        $path = str_plural($path);
+
+        //  route location
+        $location = config('laraman.route.prefixDot') . $path;
+
+        return [$this->model, $path, $location];
+    }
+
+    public function create()
+    {
+        $this->startup();
+
+        return view($this->viewPath . '.create');
     }
 
     public function index(Request $request)
     {
+        $this->startup();
+
         list($model, $path, $location) = $this->prep();
 
         $sort = $request->input('sort', $this->sort);
         $order = $request->input('order', $this->order);
-        $page = $request->input('page', $this->page);
-        $limit = $request->input('limit', $this->limit);
-        $offset = $page * $limit - $limit;
+        $page = (int) $request->input('page', $this->page);
+        $limit = (int) $request->input('limit', $this->limit);
+        $offset = (int) $page * $limit - $limit;
 
         $columns = collect($this->columns);
 
@@ -149,12 +162,12 @@ trait LaramanController
             $sortField = str_replace($relatedModel . '.', $builder->getModel()->$relatedModel()->getRelated()->getTable() . '.', $sortField);
         }
         //  if sort is on a count field, it's related
-        elseif (!in_array($sort, Schema::getColumnListing($builder->getModel()->getTable()))) {
-            $builder->withCount($sort)
-                    ->with($sort);
+//        elseif (!in_array($sort, Schema::getColumnListing($builder->getModel()->getTable()))) {
+//            $builder->withCount($sort)
+//                    ->with($sort);
 
-            $sortField = $sort . '_count';
-        }
+//            $sortField = $sort . '_count';
+//        }
 
         //  running a search
         if (!empty($search) && $this->searchEnabled) {
@@ -162,19 +175,29 @@ trait LaramanController
 
             $builder->whereIn('id', $ids);
 
-            //  user sorted results
-            if ($request->has('sort')) {
-                $builder->orderBy(DB::raw('`' . $sortField . '`'), $order);
-            } else {
+            //  search sorted results
+            if (!$request->has('sort') && count($ids) > 0) {
                 $builder->orderByRaw(DB::raw('FIELD(id, ' . implode(', ', $ids)) . ') asc');
+
+                $sort = null;
             }
-        } else {
-            $builder->orderBy(DB::raw($sortField), $order);
         }
 
+        $rows = $builder->get();
+
+        //  build a faker paginator
         $paginator = $builder->paginate($limit);
 
-        $rows = $paginator->map(function($row) use ($model, $fields, $related, $location, $buttons) {
+        //  sort them only if not searching
+        if ($sort) {
+            $sortMethod = 'sortBy' . (($order == 'desc') ? 'Desc' : '');
+            $rows = $rows->$sortMethod($sort);
+        }
+
+        //  slice them
+        $rows = $rows->slice($offset, $limit);
+
+        $rows = $rows->map(function($row) use ($model, $fields, $related, $location, $buttons) {
             $new = [];
 
             //  run the formatters
@@ -294,6 +317,8 @@ trait LaramanController
             'search' => $search,
             'searchEnabled' => $this->searchEnabled,
             'location' => $location,
+            'header' => !empty($this->header) ? $this->header : $this->viewPath  .'.header',
+            'footer' => !empty($this->footer) ? $this->footer : 'laraman::' . $this->viewPath . '.footer',
         ]);
     }
 
@@ -304,6 +329,8 @@ trait LaramanController
      */
     public function show($id)
     {
+        $this->startup();
+
         list($model, $path, $location) = $this->prep();
 
         $row = $model::whereId($id)->first();
@@ -470,11 +497,15 @@ trait LaramanController
 
     public function destroy($id)
     {
+        $this->startup();
+
         dd('destroying ' . $id);
     }
 
     public function filter(Request $request)
     {
+        $this->startup();
+
         list($model, $path, $location) = $this->prep();
 
         //  sort and order not allowed
@@ -488,7 +519,7 @@ trait LaramanController
                     $params['filter[' . $filter['field'] . ']'] = urlencode($submittedFilters[$filter['field'] . '-start']) . ':' . urlencode($submittedFilters[$filter['field'] . '-end']);
                 }
             }
-            elseif (isset($submittedFilters[$filter['field']])) {
+            elseif (!empty($submittedFilters[$filter['field']])) {
                 $params['filter[' . $filter['field'] . ']'] = urlencode($submittedFilters[$filter['field']]);
             }
         }
@@ -503,6 +534,8 @@ trait LaramanController
 
     public function search(Request $request)
     {
+        $this->startup();
+
         if (!$this->searchEnabled) {
             return redirect()->back()->with('error', 'Search is disabled for this area.');
         }
