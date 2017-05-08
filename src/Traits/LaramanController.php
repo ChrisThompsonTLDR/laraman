@@ -55,7 +55,7 @@ trait LaramanController
             }
         }
 
-        $this->viewPath = 'laraman::' . strtolower(str_plural(class_basename($this->model)));
+        $this->viewPath = config('laraman.view.hintpath') . '::' . strtolower(str_plural(class_basename($this->model)));
     }
 
     private function prep()
