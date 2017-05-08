@@ -1,11 +1,12 @@
-@extends('laraman::layout')
+@extends('superadmin::layout')
 
 @section('content')
+@includeIf($header)
 <div class="container-fluid">
     <div id="toolbar" class="row">
         <div class="col col-xs-12">
             @if ($searchEnabled)
-            <div class="pull-right">
+            <div id="search" class="pull-right">
                 {!! Form::open(['route' => $location . '.search', 'class' => 'form-inline']) !!}
                     {!! Form::hidden('sort', $params['sort'], ['id' => 'sort']) !!}
                     {!! Form::hidden('order', $params['order'], ['id' => 'order']) !!}
@@ -37,13 +38,16 @@
                 @foreach ($filters as $filter)
                     @include('laraman::filters.' . $filter->type, compact('filter', 'params'))
                 @endforeach
-                <button type="submit" class="btn btn-info">Filter</button>
-                <a href="{{ route($location . '.index') }}" class="btn btn-danger">Clear</a>
+                <div id="filter-buttons" class="form-group">
+                    <button type="submit" class="btn btn-info">Filter</button>
+                    <a href="{{ route($location . '.index') }}" class="btn btn-danger">Clear</a>
+                </div>
             {!! Form::close() !!}
             </div>
             @endif
         </div>
     </div>
+    <hr>
     <div class="row">
         <div class="col col-xs-12">
             @if (!$rows->isEmpty())
@@ -123,4 +127,5 @@
         </div>
     </div>
 </div>
+@includeIf($footer)
 @endsection
