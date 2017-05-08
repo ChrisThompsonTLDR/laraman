@@ -1,4 +1,4 @@
-@extends('superadmin::layout')
+@extends(config('laraman.view.hintpath') . '::layout')
 
 @section('content')
 @includeIf($header)
