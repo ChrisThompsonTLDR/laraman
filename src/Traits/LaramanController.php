@@ -252,7 +252,7 @@ trait LaramanController
 
                 //  blades
                 if (strip_tags($button) == $button) {
-                    $actions[] = view(config('laraman.view.hintpath') . '::buttons.' . $button, compact('row', 'location', 'class', 'location'))->render();
+                    $actions[] = view($button, compact('row', 'location', 'class', 'location'))->render();
                 }
                 //  something else
                 else {
