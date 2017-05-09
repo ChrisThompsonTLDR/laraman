@@ -318,7 +318,7 @@ trait LaramanController
             'searchEnabled' => $this->searchEnabled,
             'location' => $location,
             'header' => !empty($this->header) ? $this->header : $this->viewPath  .'.header',
-            'footer' => !empty($this->footer) ? $this->footer : 'laraman::' . $this->viewPath . '.footer',
+            'footer' => !empty($this->footer) ? $this->footer : $this->viewPath . '.footer',
         ]);
     }
 
