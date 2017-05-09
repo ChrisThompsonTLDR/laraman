@@ -252,7 +252,7 @@ trait LaramanController
 
                 //  blades
                 if (strip_tags($button) == $button) {
-                    $actions[] = view('laraman::buttons.' . $button, compact('row', 'location', 'class', 'location'))->render();
+                    $actions[] = view(config('laraman.view.hintpath') . '::buttons.' . $button, compact('row', 'location', 'class', 'location'))->render();
                 }
                 //  something else
                 else {
@@ -306,7 +306,7 @@ trait LaramanController
             $params['search'] = $search;
         }
 
-        return view('laraman::index', [
+        return view(config('laraman.view.hintpath') . '::index', [
             'paginator' => $paginator,
             'rows' => collect($rows),
             'columns' => $columns,
