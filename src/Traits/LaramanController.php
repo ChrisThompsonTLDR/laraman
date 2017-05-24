@@ -239,28 +239,7 @@ trait LaramanController
                 }
             });
 
-
-            $actions = [];
-
-            $buttons->each(function($button) use (&$actions, $location, $row) {
-                $class = '';
-
-                if (is_array($button)) {
-                    $class  = isset($button['class']) ? $button['class'] : null;
-                    $button = isset($button['blade']) ? $button['blade'] : null;
-                }
-
-                //  blades
-                if (strip_tags($button) == $button) {
-                    $actions[] = view($button, compact('row', 'location', 'class', 'location'))->render();
-                }
-                //  something else
-                else {
-                    $actions[] = $button;
-                }
-            });
-
-            $new['actions'] = implode('&nbsp;', $actions);
+            $new['entity'] = $row;
 
             return (object) $new;
         });
@@ -345,9 +324,9 @@ trait LaramanController
         $next = $model::whereRaw('id = (select min(id) from ' . $currentModel->getTable() . ' where id > ' . $row->id . ')')->first();
 
         //  custom blade available
-        $blade = 'laraman::' . $path . '.show';
-        if (!View::exists('laraman::' . $blade)) {
-            $blade = 'laraman::show';
+        $blade = config('laraman.view.hintpath') . '::' . $path . '.show';
+        if (!View::exists(config('laraman.view.hintpath') . '::' . $blade)) {
+            $blade = config('laraman.view.hintpath') . '::show';
         }
 
         $related = [];
@@ -440,7 +419,7 @@ trait LaramanController
 
                     //  blades
                     if (strip_tags($button) == $button) {
-                        $actions[] = view('laraman::buttons.' . $button, compact('row', 'location', 'class', 'location'))->render();
+                        $actions[] = view(config('laraman.view.hintpath') . '::buttons.' . $button, compact('row', 'location', 'class', 'location'))->render();
                     }
                     //  something else
                     else {
@@ -499,7 +478,19 @@ trait LaramanController
     {
         $this->startup();
 
-        dd('destroying ' . $id);
+        list($model, $path, $location) = $this->prep();
+
+        $row = $model::whereId($id)->first();
+
+        if (!$row) {
+            return back()
+                ->with('error', 'Record with id ' . $id . ' is not valid.');
+        }
+
+        $row->delete();
+
+        return back()
+            ->with('success', 'Record with id ' . $id . ' deleted successfully.');
     }
 
     public function filter(Request $request)

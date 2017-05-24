@@ -43,7 +43,7 @@ trait LaramanModel
         $options = isset($params['options']) ? $params['options'] : null;
 
         if (!empty($options['blade'])) {
-            return view(config('laraman.view.hintpath') . '::fields.' . $options['blade'], compact('row', 'value', 'column', 'options'));
+            return view($options['blade'], compact('row', 'value', 'column', 'options'));
         }
     }
 

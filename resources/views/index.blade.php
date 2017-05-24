@@ -36,7 +36,7 @@
                 @endif
 
                 @foreach ($filters as $filter)
-                    @include('laraman::filters.' . $filter->type, compact('filter', 'params'))
+                    @include(config('laraman.view.hintpath') . '::filters.' . $filter->type, compact('filter', 'params'))
                 @endforeach
                 <div id="filter-buttons" class="form-group">
                     <button type="submit" class="btn btn-info">Filter</button>
@@ -90,7 +90,29 @@
                             <td>{!! $row->{$column->field} or '' !!}</td>
                             @endforeach
                             @if ($buttons->count() > 0)
-                            <td>{!! $row->actions or '' !!}</th>
+                            <td>
+                            <?php
+                                $buttons->each(function($button) use ($location, $row) {
+                                    $class = '';
+
+                                    if (is_array($button)) {
+                                        $class  = isset($button['class']) ? $button['class'] : null;
+                                        $button = isset($button['blade']) ? $button['blade'] : null;
+                                    }
+
+                                    //  blades
+                                    if (strip_tags($button) == $button) {
+                            ?>
+                                        @include($button, compact('row', 'location', 'class'))
+                            <?php
+                                    }
+                                    //  something else
+                                    else {
+                                        echo $button;
+                                    }
+                                });
+                            ?>
+                            </td>
                             @endif
                         </tr>
                     @endforeach
