@@ -144,8 +144,16 @@ trait LaramanController
                 $appliedFilters[$key . '-end'] = $end;
             }
             elseif ($filters->pluck('field')->contains($key)) {
-                $builder->where($joinKey, $val);
-                $appliedFilters[$key] = $val;
+                //  find this configured filter
+                foreach ($this->filters as $filter) {
+                    if ($filter['type'] == 'input') {
+                        $builder->where($joinKey, 'like', '%' . $val . '%');
+                    } else {
+                        $builder->where($joinKey, $val);
+                    }
+
+                    $appliedFilters[$key] = $val;
+                }
             }
         });
 
