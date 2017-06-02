@@ -45,7 +45,7 @@ trait LaramanController
         }
 
         //  turn on/off searching
-        if ($this->searchEnabled == null) {
+        if (is_null($this->searchEnabled)) {
             $traits = class_uses($this->model);
 
             if (in_array('Laravel\Scout\Searchable', $traits)) {
@@ -55,7 +55,9 @@ trait LaramanController
             }
         }
 
-        $this->viewPath = config('laraman.view.hintpath') . '::' . strtolower(str_plural(class_basename($this->model)));
+        if (is_null($this->viewPath)) {
+            $this->viewPath = config('laraman.view.hintpath') . '::' . strtolower(str_plural(class_basename($this->model)));
+        }
     }
 
     private function prep()
