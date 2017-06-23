@@ -35,18 +35,6 @@ trait LaramanModel
         return $query->join($table, $left, $operator, $right, $type, $where);
     }
 
-    public static function formatterBlade($params)
-    {
-        $value   = isset($params['value']) ? $params['value'] : null;
-        $column  = isset($params['column']) ? $params['column'] : null;
-        $row     = isset($params['row']) ? $params['row'] : null;
-        $options = isset($params['options']) ? $params['options'] : null;
-
-        if (!empty($options['blade'])) {
-            return view($options['blade'], compact('row', 'value', 'column', 'options'));
-        }
-    }
-
     public static function formatterBoolean($params)
     {
         $value   = isset($params['value']) ? $params['value'] : null;
@@ -75,7 +63,11 @@ trait LaramanModel
         $row     = isset($params['row']) ? $params['row'] : null;
         $options = isset($params['options']) ? $params['options'] : null;
 
-        return $row->{$column['field']}->count();
+        if ($row->{$column['field']}) {
+            return $row->{$column['field']}->count();
+        }
+
+        return 0;
     }
 
     public static function formatterDatetime($params)
