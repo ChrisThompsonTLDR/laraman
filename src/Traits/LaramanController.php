@@ -201,7 +201,7 @@ trait LaramanController
         //  sort them only if not searching
         if ($sort) {
             $sortMethod = 'sortBy' . (($order == 'desc') ? 'Desc' : '');
-            $rows = $rows->$sortMethod($sort);
+            $rows = $rows->$sortMethod($sort, SORT_NATURAL|SORT_FLAG_CASE);
         }
 
         //  slice them
