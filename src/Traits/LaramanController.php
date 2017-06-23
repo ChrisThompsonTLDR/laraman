@@ -127,6 +127,7 @@ trait LaramanController
                 $builder->modelJoin($relatedModel);
             }
 
+
             // ranges
             if (str_contains($val, ':')) {
                 list($start, $end) = explode(':', $val);
@@ -147,15 +148,14 @@ trait LaramanController
             }
             elseif ($filters->pluck('field')->contains($key)) {
                 //  find this configured filter
-                foreach ($this->filters as $filter) {
-                    if ($filter['type'] == 'input') {
-                        $builder->where($joinKey, 'like', '%' . $val . '%');
-                    } else {
-                        $builder->where($joinKey, $val);
-                    }
-
-                    $appliedFilters[$key] = $val;
+                $filter = $filters->where('field', $key)->first();
+                if ($filter['type'] == 'input') {
+                    $builder->where($joinKey, 'like', '%' . $val . '%');
+                } else {
+                    $builder->where($joinKey, $val);
                 }
+
+                $appliedFilters[$key] = $val;
             }
         });
 
