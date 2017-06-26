@@ -66,7 +66,7 @@ trait LaramanController
         $path = str_plural($path);
 
         //  route location
-        $location = config('laraman.route.prefixDot') . $path;
+        $location = config('laraman.view.hintpath') . '.' .  str_replace(config('laraman.view.hintpath') . '::', '', $this->viewPath);
 
         return [$this->model, $path, $location];
     }
