@@ -193,6 +193,8 @@ trait LaramanController
             }
         }
 
+        $builder = $this->scope($builder);
+
         $rows = $builder->get();
 
         //  build a faker paginator
@@ -533,6 +535,20 @@ trait LaramanController
         return redirect()->route($location . '.index', str_replace('%3A', ':', http_build_query($params)));
     }
 
+    /**
+     * Allows the controller to scope results
+     *
+     * @param mixed $builder
+     */
+    public function scope($builder) {
+        return $builder;
+    }
+
+    /**
+     * Processes the search post and forwards it to a get
+     *
+     * @param Request $request
+     */
     public function search(Request $request)
     {
         $this->startup();
