@@ -38,6 +38,8 @@ trait LaramanController
 
     public $viewPath;
 
+    public $routePath;
+
     //  holds extras that will be passed from
     //  the controller __construct() to the view
     public $extras;
@@ -62,6 +64,10 @@ trait LaramanController
         if (is_null($this->viewPath)) {
             $this->viewPath = config('laraman.view.hintpath') . '::' . strtolower(str_plural(class_basename($this->model)));
         }
+
+        if (is_null($this->routePath)) {
+            $this->routePath = config('laraman.route.prefix') . '.' . strtolower(str_plural(class_basename($this->model)));
+        }
     }
 
     private function prep()
@@ -69,10 +75,12 @@ trait LaramanController
         $path = strtolower(str_singular(str_replace('Controller', '', class_basename($this))));
         $path = str_plural($path);
 
-        //  route location
-        $location = config('laraman.route.prefix') . '.' .  str_replace(config('laraman.view.hintpath') . '::', '', $this->viewPath);
+        config(['laraman.route.path' => $this->routePath]);
 
-        return [$this->model, $path, $location];
+        //  route location
+        $location = $this->routePath;
+
+        return [$this->model, $location];
     }
 
     public function create()
@@ -86,7 +94,7 @@ trait LaramanController
     {
         $this->startup();
 
-        list($model, $path, $location) = $this->prep();
+        list($model, $location) = $this->prep();
 
         $sort = $request->input('sort', $this->sort);
         $order = $request->input('order', $this->order);

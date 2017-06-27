@@ -34,7 +34,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         //  auto build controller name
         if (empty($controller)) {
-            $controller = title_case(str_singular($path)) . 'Controller';
+            $controller = str_replace(' ', '', title_case(str_replace('-', ' ', str_singular($path)))) . 'Controller';
         }
 
         Route::post($path . '/filter', ['as' => config('laraman.route.prefixDot') . $path . '.filter', 'uses' => $controller . '@filter']);
