@@ -38,6 +38,10 @@ trait LaramanController
 
     public $viewPath;
 
+    //  holds extras that will be passed from
+    //  the controller __construct() to the view
+    public $extras;
+
     private function startup()
     {
         if (empty($this->model)) {
@@ -310,6 +314,7 @@ trait LaramanController
             'location' => $location,
             'header' => !empty($this->header) ? $this->header : $this->viewPath  .'.header',
             'footer' => !empty($this->footer) ? $this->footer : $this->viewPath . '.footer',
+            'extras' => $this->extras,
         ]);
     }
 
