@@ -193,7 +193,14 @@ trait LaramanController
 
         //  running a search
         if (!empty($search) && $this->searchEnabled) {
-            $ids = $model::search($search)->take($model::count())->get()->pluck('id')->toArray();
+            $results = $model::search($search);
+            //  some search drivers return arrays
+            //  mainly for people using https://github.com/algolia/algoliasearch-laravel
+            if (isset($results['hits'])) {
+                $ids = collect($results['hits'])->pluck('id')->toArray();
+            } else {
+                $ids = $results->take($model::count())->get()->pluck('id')->toArray();
+            }
 
             $builder->whereIn('id', $ids);
 
