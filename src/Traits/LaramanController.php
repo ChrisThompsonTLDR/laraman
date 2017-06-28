@@ -570,7 +570,7 @@ trait LaramanController
             return redirect()->back()->with('error', 'Search is disabled for this area.');
         }
 
-        list($model, $path, $location) = $this->prep();
+        list($model, $location) = $this->prep();
 
         //  sort and order not allowed
         $params = $request->only([/*'sort', 'order', 'page', */'limit']);
