@@ -72,9 +72,6 @@ trait LaramanController
 
     private function prep()
     {
-        $path = strtolower(str_singular(str_replace('Controller', '', class_basename($this))));
-        $path = str_plural($path);
-
         config(['laraman.route.path' => $this->routePath]);
 
         //  route location
@@ -342,7 +339,7 @@ trait LaramanController
     {
         $this->startup();
 
-        list($model, $path, $location) = $this->prep();
+        list($model, $location) = $this->prep();
 
         $row = $model::whereId($id)->first();
 
@@ -356,7 +353,7 @@ trait LaramanController
         $next = $model::whereRaw('id = (select min(id) from ' . $currentModel->getTable() . ' where id > ' . $row->id . ')')->first();
 
         //  custom blade available
-        $blade = config('laraman.view.hintpath') . '::' . $path . '.show';
+        $blade = $this->viewPath . '.show';
         if (!View::exists(config('laraman.view.hintpath') . '::' . $blade)) {
             $blade = config('laraman.view.hintpath') . '::show';
         }
@@ -510,7 +507,7 @@ trait LaramanController
     {
         $this->startup();
 
-        list($model, $path, $location) = $this->prep();
+        list($model, $location) = $this->prep();
 
         $row = $model::whereId($id)->first();
 
@@ -529,7 +526,7 @@ trait LaramanController
     {
         $this->startup();
 
-        list($model, $path, $location) = $this->prep();
+        list($model, $location) = $this->prep();
 
         //  sort and order not allowed
         $params = $request->only([/*'sort', 'order', 'page',*/ 'limit']);
