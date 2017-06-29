@@ -278,7 +278,7 @@ trait LaramanController
 
             //  always have a display
             if (!isset($column->display)) {
-                $column->field = str_replace('-', ' ', $column->field);
+                $column->field = str_replace('_', ' ', $column->field);
 
                 if ($column->field == 'id') {
                     $column->display = 'ID';
