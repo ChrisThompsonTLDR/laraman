@@ -518,7 +518,8 @@ trait LaramanController
 
         $row->delete();
 
-        return back()
+        return redirect()
+            ->route($location . '.index')
             ->with('success', 'Record with id ' . $id . ' deleted successfully.');
     }
 
