@@ -523,6 +523,24 @@ trait LaramanController
             ->with('success', 'Record with id ' . $id . ' deleted successfully.');
     }
 
+    public function edit($id)
+    {
+        $this->startup();
+
+        list($model, $location) = $this->prep();
+
+        $row = $model::whereId($id)->first();
+
+        if (!$row) {
+            return redirect()->back()->with('error', 'Could not locate that row.');
+        }
+
+        $parts = explode('\\', $model);
+        $name = strtolower(array_pop($parts));
+
+        return view($this->viewPath . '.edit', [$name => $row]);
+    }
+
     public function filter(Request $request)
     {
         $this->startup();
