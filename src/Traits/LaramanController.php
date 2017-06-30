@@ -14,7 +14,7 @@ trait LaramanController
     public $columns = [];
 
     //  default sort column
-    public $sort = 'id';
+    public $sort = null;
 
     //  default sort direction
     public $order = 'desc';
@@ -100,6 +100,11 @@ trait LaramanController
         $offset = (int) $page * $limit - $limit;
 
         $columns = collect($this->columns);
+
+        //  if no sort, sort by first column
+        if (!$sort) {
+            $sort = $columns->first()['field'];
+        }
 
         //  get the related model fields
         $related = $columns->filter(function ($column) {
@@ -278,7 +283,7 @@ trait LaramanController
 
             //  always have a display
             if (!isset($column->display)) {
-                $column->field = str_replace('-', ' ', $column->field);
+                $column->field = str_replace('_', ' ', $column->field);
 
                 if ($column->field == 'id') {
                     $column->display = 'ID';
