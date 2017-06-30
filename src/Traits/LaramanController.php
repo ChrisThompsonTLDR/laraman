@@ -204,11 +204,11 @@ trait LaramanController
                 $ids = $results->take($model::count())->get()->pluck('id')->toArray();
             }
 
-            $builder->whereIn('id', $ids);
+            $builder->whereIn($builder->getModel()->getTable() . '.id', $ids);
 
             //  search sorted results
             if (!$request->has('sort') && count($ids) > 0) {
-                $builder->orderByRaw(DB::raw('FIELD(id, ' . implode(', ', $ids)) . ') asc');
+                $builder->orderByRaw(DB::raw('FIELD(' . $builder->getModel()->getTable() . '.id, ' . implode(', ', $ids)) . ') asc');
 
                 $sort = null;
             }
