@@ -271,3 +271,38 @@ class TrialController extends Controller
         return $builder->trial();
     }
 ```
+
+### Extras
+
+Have extra data to pass from the controller to the view, use `extras`
+
+```
+class TrialController extends Controller
+{
+    use LaramanController;
+
+    public function __construct()
+    {
+        $this->columns = [
+            [
+                'field' => 'created_at',
+                'display' => 'Created',
+                'formatter' => 'datetime',
+                'options'   => [
+                    'format' => 'F j, Y g:ia',
+                ]
+            ]
+        ];
+
+        //  active trials
+        $this->extras['active'] = Membership::trial()->active()->count();
+
+        //  by day
+        $this->extras['byday'] = [];
+        foreach (range(0, 30) as $day) {
+            $date = Carbon::now()->subDays($day)->format('Y-m-d');
+
+            $this->extras['byday'][$date] = Membership::trial()->active()->whereDate('created_at', $date)->count();
+        }
+    }
+```
