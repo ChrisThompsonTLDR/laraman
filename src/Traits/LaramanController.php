@@ -288,7 +288,7 @@ trait LaramanController
                 if ($column->field == 'id') {
                     $column->display = 'ID';
                 } else {
-                    $column->display = title_case($column->field);
+                    $column->display = title_case($column->display);
                 }
             }
 
