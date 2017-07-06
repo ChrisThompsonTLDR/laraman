@@ -255,3 +255,19 @@ public function __construct()
         'laraman::buttons.receipt',
     ];
 ```
+
+### Scopes
+
+If you need to scope the model being used, define a `scope` method in your controller
+
+```
+class TrialController extends Controller
+{
+    use LaramanController;
+
+    public function scope($builder)
+    {
+        //  only show trials
+        return $builder->trial();
+    }
+```
