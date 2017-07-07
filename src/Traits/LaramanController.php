@@ -116,6 +116,11 @@ trait LaramanController
             return !str_contains($column['field'], '.');
         });
 
+        //  count fields to eager load
+        $counts = $columns->filter(function ($column) {
+            return isset($column['formatter']) && $column['formatter'] == 'count';
+        })->pluck('field');
+
         $buttons = collect($this->buttons);
 
         $filters = collect($this->filters);
@@ -173,6 +178,11 @@ trait LaramanController
             }
         });
 
+        //  eager load
+        foreach ($counts as $count) {
+            $builder->with($count);
+        }
+
         $sortField = $sort;
 
         //  if sort is not related model
@@ -180,18 +190,12 @@ trait LaramanController
         if (str_contains($sort, '.')) {
             list($relatedModel, $rest) = explode('.', $sort);
 
-            $builder->modelJoin($relatedModel);
+            $builder->modelJoin($relatedModel)
+                ->with($relatedModel);
 
             //  use the appropriate table name
             $sortField = str_replace($relatedModel . '.', $builder->getModel()->$relatedModel()->getRelated()->getTable() . '.', $sortField);
         }
-        //  if sort is on a count field, it's related
-//        elseif (!in_array($sort, Schema::getColumnListing($builder->getModel()->getTable()))) {
-//            $builder->withCount($sort)
-//                    ->with($sort);
-
-//            $sortField = $sort . '_count';
-//        }
 
         //  running a search
         if (!empty($search) && $this->searchEnabled) {
