@@ -1,6 +1,6 @@
 # Laraman - Laravel Data Manager
 
-Laraman is a Laravel based package designed to help manage the data of applications.  It is loosely a CRUD manager, but doesn't get bogged down in the data manipulation aspect.
+Laraman is a Laravel based package designed to help being able review data quickly.
 
 Laraman is really good at the index route, searching, filtering and pagination.  It leaves the create, update and delete to the application.
 
@@ -89,7 +89,7 @@ and then use it
 use LaramanController;
 ```
 
-Laraman expects your controller to have a `__construct()`` method where a few things are configured.
+Laraman expects your controller to have a `__construct()` method where a few things are configured.
 
 ```
 public function __construct()
