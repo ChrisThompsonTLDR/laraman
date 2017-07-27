@@ -196,7 +196,6 @@ trait LaramanController
             //  use the appropriate table name
             $sortField = str_replace($relatedModel . '.', $builder->getModel()->$relatedModel()->getRelated()->getTable() . '.', $sortField);
         }
-
         //  running a search
         if (!empty($search) && $this->searchEnabled) {
             $results = $model::search($search);
@@ -222,13 +221,25 @@ trait LaramanController
 
         $rows = $builder->get();
 
+        //  if the sort is a count formatter,
+        //  count it before sorting
+        if ($counts->contains($sort)) {
+            $rows = $rows->map(function($row) use ($sort) {
+                $row->{$sort . 'Count'} = $row->{$sort}->count();
+
+                return $row;
+            });
+
+            $sortField = $sortField . 'Count';
+        }
+
         //  build a faker paginator
         $paginator = $builder->paginate($limit);
 
         //  sort them only if not searching
         if ($sort) {
             $sortMethod = 'sortBy' . (($order == 'desc') ? 'Desc' : '');
-            $rows = $rows->$sortMethod($sort, SORT_NATURAL|SORT_FLAG_CASE);
+            $rows = $rows->$sortMethod($sortField, SORT_NATURAL|SORT_FLAG_CASE);
         }
 
         //  slice them
