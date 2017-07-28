@@ -27,7 +27,7 @@
         @stack('after-styles')
     </head>
     <body>
-        @include('laraman::blocks.flash')
+        @include(config('laraman.view.hintpath') . '::blocks.flash')
 
         @yield('content')
 
