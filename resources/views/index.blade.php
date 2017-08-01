@@ -1,4 +1,4 @@
-@extends(config('laraman.view.hintpath') . '::layout')
+@extends(config('laraman.view.layout', config('laraman.view.hintpath') . '::layout'))
 
 @section('content')
 @includeIf($header)
@@ -91,8 +91,8 @@
                             @endforeach
                             @if ($buttons->count() > 0)
                             <td>
-                            <?php
-                                $buttons->each(function($button) use ($location, $row) {
+                                @foreach ($buttons as $button)
+                                @php
                                     $class = '';
 
                                     if (is_array($button)) {
@@ -102,17 +102,17 @@
 
                                     //  blades
                                     if (strip_tags($button) == $button) {
-                            ?>
-                                        @include($button, compact('row', 'location', 'class'))
-                            <?php
+                                @endphp
+                                @include($button, compact('row', 'location', 'class'))
+                                @php
                                     }
                                     //  something else
                                     else {
                                         echo $button;
                                     }
-                                });
-                            ?>
-                            </td>
+                                @endphp
+                                @endforeach
+                                </td>
                             @endif
                         </tr>
                     @endforeach

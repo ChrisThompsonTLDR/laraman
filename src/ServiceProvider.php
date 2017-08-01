@@ -25,7 +25,12 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         $loader->alias('Form',    \Collective\Html\FormFacade::class);
         $loader->alias('Html',    \Collective\Html\HtmlFacade::class);
 
-        $this->app->register('Collective\Html\HtmlServiceProvider');
+        $this->app->register(\Collective\Html\HtmlServiceProvider::class);
+
+        //  make the config available even if not published
+        $this->mergeConfigFrom(
+            realpath(dirname(__DIR__)) . '/config/laraman.php', 'laraman'
+        );
 
         config(['laraman.route.prefixDot' => config('laraman.route.prefix') . ((empty(config('laraman.route.prefix'))) ?: '.')]);
     }

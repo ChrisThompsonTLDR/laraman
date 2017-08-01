@@ -2,10 +2,12 @@
 
 return [
     'route' => [
-        'namespace' => 'Manage',
-        'prefix'    => 'manage',
+        'middleware' => ['web'],
+        'namespace'  => 'Manage',
+        'prefix'     => 'manage',
     ],
     'view' => [
         'hintpath' => 'laraman',
+        'layout'   => 'laraman::layout',  //  blade to use for layouts
     ],
 ];

@@ -1,4 +1,4 @@
-@extends(config('laraman.view.hintpath') . '::layout')
+@extends(config('laraman.view.layout', config('laraman.view.hintpath') . '::layout'))
 
 @push('after-styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.0/bootstrap-table.min.css">
