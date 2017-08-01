@@ -178,9 +178,13 @@ trait LaramanController
             }
         });
 
+        $tmpModel = new $model;
+
         //  eager load
         foreach ($counts as $count) {
-            $builder->with($count);
+            if (method_exists($tmpModel, $count)) {
+                $builder->with($count);
+            }
         }
 
         $sortField = $sort;
