@@ -23,7 +23,7 @@ trait LaramanController
     public $page = 1;
 
     //  the limit
-    public $limit = 10;
+    public $limit;
 
     //  the action buttons that will show
     public $buttons = [];
