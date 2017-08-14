@@ -1,1 +1,1 @@
-<a href="{{ route($location . '.show', $row->id) }}" class="@if($class){{ $class }}@else{{ 'btn btn-xs btn-primary' }}@endif">View</a>
+<a href="{{ route($location . '.show', $row->entity->id) }}" class="@if($class){{ $class }}@else{{ 'btn btn-xs btn-primary' }}@endif">View</a>
