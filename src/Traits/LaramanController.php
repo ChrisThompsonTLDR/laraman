@@ -68,6 +68,10 @@ trait LaramanController
         if (is_null($this->routePath)) {
             $this->routePath = config('laraman.route.prefix') . '.' . strtolower(str_plural(class_basename($this->model)));
         }
+
+        if (is_null($this->limit)) {
+            $this->limit = config('laraman.limit');
+        }
     }
 
     private function prep()
