@@ -342,19 +342,20 @@ trait LaramanController
         }
 
         return view(config('laraman.view.hintpath') . '::index', [
-            'paginator' => $paginator,
-            'rows' => collect($rows),
-            'columns' => $columns,
-            'params' => $params,
-            'buttons' => $buttons,
-            'filters' => $filters,
-            'limits' => array_combine($this->limits, $this->limits),
-            'search' => $search,
+            'paginator'     => $paginator,
+            'rows'          => collect($rows),
+            'columns'       => $columns,
+            'params'        => $params,
+            'buttons'       => $buttons,
+            'filters'       => $filters,
+            'limits'        => array_combine($this->limits, $this->limits),
+            'search'        => $search,
             'searchEnabled' => $this->searchEnabled,
-            'location' => $location,
-            'header' => !empty($this->header) ? $this->header : $this->viewPath  .'.header',
-            'footer' => !empty($this->footer) ? $this->footer : $this->viewPath . '.footer',
-            'extras' => $this->extras,
+            'location'      => $location,
+            'viewPath'      => $this->viewPath,
+            'header'        => !empty($this->header) ? $this->header : $this->viewPath  .'.header',
+            'footer'        => !empty($this->footer) ? $this->footer : $this->viewPath . '.footer',
+            'extras'        => $this->extras,
         ]);
     }
 
