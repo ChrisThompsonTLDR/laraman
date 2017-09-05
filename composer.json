@@ -23,5 +23,12 @@
     "type": "project",
     "require": {
         "laravelcollective/html": "^5.3.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Christhompsontldr\\Laraman\\ServiceProvider"
+            ]
+        }
     }
 }
