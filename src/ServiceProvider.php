@@ -11,6 +11,10 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     public function boot()
     {
         $this->loadViewsFrom(realpath(dirname(__DIR__) . '/resources/views'), config('laraman.view.hintpath'));
+
+        $this->publishes([
+            realpath(dirname(__DIR__)) . '/config/laraman.php' => config_path('laraman.php'),
+        ], 'config');
     }
 
     public function register()
