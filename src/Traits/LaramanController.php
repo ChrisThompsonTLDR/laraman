@@ -103,6 +103,15 @@ trait LaramanController
         $limit = (int) $request->input('limit', $this->limit);
         $offset = (int) $page * $limit - $limit;
 
+        //  convert everything to array
+        foreach ($this->columns as &$column) {
+            if (!is_array($column)) {
+                $column = [
+                    'field' => $column,
+                ];
+            }
+        }
+
         $columns = collect($this->columns);
 
         //  if no sort, sort by first column
