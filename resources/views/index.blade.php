@@ -73,7 +73,7 @@
                                 {{ $column->display }}
 
                                 @if ($params['sort'] == $column->field)
-                                <i class="fa fa-chevron-{{ (($params['order'] == 'desc') ? 'down' : 'up') }}" aria-hidden="true"></i>
+                                <i class="{{ config('laraman.view.icon_' . (($params['order'] == 'desc') ? 'down' : 'up'), 'fa fa-chevron-' . (($params['order'] == 'desc') ? 'down' : 'up')) }}" aria-hidden="true"></i>
                                 @endif
                             @if (!isset($column->sortable) || $column->sortable)</a>@endif
                         </th>
