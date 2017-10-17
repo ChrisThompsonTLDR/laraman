@@ -160,7 +160,6 @@ trait LaramanController
                 $builder->modelJoin($relatedModel);
             }
 
-
             // ranges
             if (str_contains($val, ':')) {
                 list($start, $end) = explode(':', $val);
@@ -182,7 +181,12 @@ trait LaramanController
             elseif ($filters->pluck('field')->contains($key)) {
                 //  find this configured filter
                 $filter = $filters->where('field', $key)->first();
-                if ($filter['type'] == 'input') {
+
+                //  custom model filter
+                if (method_exists($builder->getModel(), 'filter' . studly_case($key))) {
+                    $builder = $builder->getModel()->{'filter' . studly_case($key)}($builder, $val);
+                }
+                elseif ($filter['type'] == 'input') {
                     $builder->where($joinKey, 'like', '%' . $val . '%');
                 } else {
                     $builder->where($joinKey, $val);
