@@ -67,6 +67,7 @@ trait LaramanController
 
         if (is_null($this->routePath)) {
             $this->routePath = config('laraman.route.prefix') . '.' . strtolower(str_plural(class_basename($this->model)));
+//            $this->routePath = str_replace('.index', '', Route::currentRouteName());
         }
 
         if (is_null($this->limit)) {
