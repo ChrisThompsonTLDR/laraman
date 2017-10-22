@@ -355,7 +355,11 @@ trait LaramanController
             $params['search'] = $search;
         }
 
-        return view(config('laraman.view.hintpath') . '::index', [
+        if (empty($this->view)) {
+            $this->view = config('laraman.view.hintpath') . '::index';
+        }
+
+        return view($this->view, [
             'paginator'     => $paginator,
             'rows'          => collect($rows),
             'columns'       => $columns,
