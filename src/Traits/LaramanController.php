@@ -275,6 +275,8 @@ trait LaramanController
                 //  this will run the row through the accessors
                 $new[$column['field']] = $row->{$column['field']};
 
+                $new['_column'] = $column;
+
                 if (!empty($column['formatter'])) {
                     $params = [
                         'value'   => $new[$column['field']],
@@ -309,7 +311,7 @@ trait LaramanController
                 }
             });
 
-            $new['entity'] = $row;
+            $new['_entity'] = $row;
 
             return (object) $new;
         });
