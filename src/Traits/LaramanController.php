@@ -40,6 +40,8 @@ trait LaramanController
 
     public $routePath;
 
+    public $chunk = 1000;
+
     //  holds extras that will be passed from
     //  the controller __construct() to the view
     public $extras;
@@ -204,20 +206,20 @@ trait LaramanController
                 $builder->with($count);
             }
         }
+        $related->each(function ($row) use ($builder) {
+            $pieces = array_slice(explode('.', $row['field']), 0, -1);
 
-        $sortField = $sort;
+            $builder->with(implode('.', $pieces));
+        });
 
-        //  if sort is not related model
-        //  let the db handle it
+        //  related model, laraman has to do the heavy lifting
         if (str_contains($sort, '.')) {
             list($relatedModel, $rest) = explode('.', $sort);
 
-            $builder->modelJoin($relatedModel)
-                ->with($relatedModel);
+            $builder->with($relatedModel);
 
-            //  use the appropriate table name
-            $sortField = str_replace($relatedModel . '.', $builder->getModel()->$relatedModel()->getRelated()->getTable() . '.', $sortField);
         }
+
         //  running a search
         if (!empty($search) && $this->searchEnabled) {
             $results = $model::search($search);
@@ -239,33 +241,64 @@ trait LaramanController
             }
         }
 
-        $builder = $this->scope($builder);
-
-        $rows = $builder->get();
-
-        //  if the sort is a count formatter,
-        //  count it before sorting
-        if ($counts->contains($sort)) {
-            $rows = $rows->map(function($row) use ($sort) {
-                $row->{$sort . 'Count'} = $row->{$sort}->count();
-
-                return $row;
-            });
-
-            $sortField = $sortField . 'Count';
-        }
-
         //  build a faker paginator
         $paginator = $builder->paginate($limit);
+
+        $key = $builder->getModel()->getKeyName();
+
+        //  chunk the results and get just the data we need
+        $tmpRows = collect([]);
+
+        $builder->chunk($this->chunk, function ($rows) use (&$tmpRows, $key, $sort, $counts, $related) {
+            foreach ($rows as $row) {
+                $record = [];
+                $record[$key] = $row->{$key};
+
+                //  sort is on a `count` formatter field
+                if ($counts->contains($sort)) {
+                    $record[$sort . 'Count'] = $row->{$sort}->count();
+                }
+
+                $record['_laraman_sort'] = null;
+
+                if (str_contains($sort, '.')) {
+                    $relateIt = explode('.', $sort);
+
+                    if ($row->{$relateIt[0]}) {
+                        $record['_laraman_sort'] = $row->$relateIt[0]->$relateIt[1];
+                    }
+                } else {
+                    $record['_laraman_sort'] = $row->{$sort};
+                }
+
+                $tmpRows->push($record);
+            }
+        });
 
         //  sort them only if not searching
         if ($sort) {
             $sortMethod = 'sortBy' . (($order == 'desc') ? 'Desc' : '');
-            $rows = $rows->$sortMethod($sortField, SORT_NATURAL|SORT_FLAG_CASE);
+            $tmpRows = $tmpRows->$sortMethod('_laraman_sort', SORT_NATURAL|SORT_FLAG_CASE);
         }
 
         //  slice them
-        $rows = $rows->slice($offset, $limit);
+        $ids = $tmpRows->slice($offset, $limit)->pluck($key);
+
+
+        //  start a new builder for the real query
+        $builder = $model::query();
+
+        //  eager load
+        $related->each(function ($row) use ($builder) {
+            $pieces = array_slice(explode('.', $row['field']), 0, -1);
+
+            $builder->with(implode('.', $pieces));
+        });
+
+        $rows = $this->scope($builder)
+            ->orderByRaw('FIELD(' . $key . ', ' . $ids->implode(',') . ')')
+            ->whereIn($key, $ids)
+            ->get();
 
         $rows = $rows->map(function($row) use ($model, $fields, $related, $location, $buttons) {
             $new = [];

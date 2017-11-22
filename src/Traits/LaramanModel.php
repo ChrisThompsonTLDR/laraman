@@ -9,32 +9,6 @@ use Illuminate\Database\Query\Expression;
 
 trait LaramanModel
 {
-
-    //  https://laracasts.com/discuss/channels/eloquent/eloquent-order-by-related-table
-    public function scopeModelJoin($query, $relation_name, $operator = '=', $type = 'left', $where = false)
-    {
-        $relation = $this->$relation_name();
-        $table = $relation->getRelated()->getTable();
-
-        if (get_class($relation) == 'Illuminate\Database\Eloquent\Relations\HasOne') {
-            $left = $relation->getQualifiedParentKeyName();
-            $right = $relation->getExistenceCompareKey();
-        } else {
-            $left = $relation->getQualifiedForeignKey();
-            $right = $table . '.'. $relation->getOwnerKey();
-        }
-
-        if (empty($query->columns)) {
-            $query->select($this->getTable().".*");
-        }
-
-        foreach (Schema::getColumnListing($table) as $related_column) {
-            $query->addSelect(new Expression("`$table`.`$related_column` AS `" . str_singular($table) . ".$related_column`"));
-        }
-
-        return $query->join($table, $left, $operator, $right, $type, $where);
-    }
-
     public static function formatterBoolean($params)
     {
         $value   = isset($params['value']) ? $params['value'] : null;
