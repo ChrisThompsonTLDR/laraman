@@ -222,7 +222,7 @@ trait LaramanController
 
         //  running a search
         if (!empty($search) && $this->searchEnabled) {
-            $results = $model::search($search)->get();
+            $results = $model::search($search)->take($model::count())->get();
 
             $ids = $results->pluck('id')->toArray();
 
