@@ -145,53 +145,90 @@ trait LaramanController
 
         $builder = $model::query();
 
+        //  scope it from the controller
+        $builder = $this->scope($builder);
+
         //  apply filters first
         $appliedFilters = [];
         collect($request->input('filter'))->each(function ($val, $key) use (&$builder, $filters, &$appliedFilters) {
             $val = urldecode($val);
 
             //  this is modified if using a related model
-            $joinKey = $builder->getModel()->getTable() . '.' . $key;
+//            $joinKey = $builder->getModel()->getTable() . '.' . $key;
 
             //  we need a join
+            $relation = false;
+
             if (str_contains($key, '.')) {
+                $relation = true;
+
                 list($relatedModel, $rest) = explode('.', $key);
-
-                $joinKey = $builder->getModel()->$relatedModel()->getRelated()->getTable() . '.' . $rest;
-
-                $builder->modelJoin($relatedModel);
             }
 
-            // ranges
-            if (str_contains($val, ':')) {
-                list($start, $end) = explode(':', $val);
-
-                $start = urldecode($start);
-                $end   = urldecode($end);
-
-                //  datetime ranges
-                $filter = $filters->where('field', $key)->first();
-                if ($filter && $filter['type'] == 'datetime-range') {
-                    $builder->whereBetween($joinKey, [Carbon::parse($start)->format('Y-m-d'), Carbon::parse($end)->endOfDay()]);
-                } else {
-                    $builder->whereBetween($joinKey, [$start, $end]);
-                }
-
-                $appliedFilters[$key . '-start'] = $start;
-                $appliedFilters[$key . '-end'] = $end;
-            }
-            elseif ($filters->pluck('field')->contains($key)) {
+            if ($filters->pluck('field')->contains($key)) {
                 //  find this configured filter
                 $filter = $filters->where('field', $key)->first();
 
-                //  custom model filter
-                if (method_exists($builder->getModel(), 'filter' . studly_case($key))) {
-                    $builder = $builder->getModel()->{'filter' . studly_case($key)}($builder, $val);
+                //  this model
+                if (!$relation) {
+                    //  custom model filter
+                    if (method_exists($builder->getModel(), 'filter' . studly_case($key))) {
+                        $builder = $builder->getModel()->{'filter' . studly_case($key)}($builder, $val);
+                    }
+                    //  ranges
+                    elseif (str_contains($val, ':')) {
+                        list($start, $end) = explode(':', $val);
+
+                        $start = urldecode($start);
+                        $end   = urldecode($end);
+
+                        //  datetime ranges
+                        $filter = $filters->where('field', $key)->first();
+                        if ($filter && $filter['type'] == 'datetime-range') {
+                            $builder->whereBetween($key, [Carbon::parse($start)->format('Y-m-d'), Carbon::parse($end)->endOfDay()]);
+                        } else {
+                            $builder->whereBetween($key, [$start, $end]);
+                        }
+
+                        $appliedFilters[$key . '-start'] = $start;
+                        $appliedFilters[$key . '-end'] = $end;
+                    }
+                    elseif ($filter['type'] == 'input') {
+                        $builder->where($key, 'like', '%' . $val . '%');
+                    } else {
+                        $builder->where($key, $val);
+                    }
                 }
-                elseif ($filter['type'] == 'input') {
-                    $builder->where($joinKey, 'like', '%' . $val . '%');
-                } else {
-                    $builder->where($joinKey, $val);
+                //  related model
+                else {
+                    $builder->whereHas($relatedModel, function ($query) use ($rest, $val, $filter, &$appliedFilters) {
+                        if (method_exists($query->getModel(), 'filter' . studly_case($rest))) {
+                            $query->{'filter' . studly_case($rest)}($query, $val);
+                        }
+                        //  ranges
+                        elseif (str_contains($val, ':')) {
+                            list($start, $end) = explode(':', $val);
+
+                            $start = urldecode($start);
+                            $end   = urldecode($end);
+
+                            //  datetime ranges
+                            $filter = $filters->where('field', $rest)->first();
+                            if ($filter && $filter['type'] == 'datetime-range') {
+                                $query->whereBetween($rest, [Carbon::parse($start)->format('Y-m-d'), Carbon::parse($end)->endOfDay()]);
+                            } else {
+                                $query->whereBetween($rest, [$start, $end]);
+                            }
+
+                            $appliedFilters[$key . '-start'] = $start;
+                            $appliedFilters[$key . '-end'] = $end;
+                        }
+                        elseif ($filter['type'] == 'input') {
+                            $query->where($rest, 'like', '%' . $val . '%');
+                        } else {
+                            $query->where($rest, $val);
+                        }
+                    });
                 }
 
                 $appliedFilters[$key] = $val;
@@ -290,10 +327,14 @@ trait LaramanController
             $builder->with(implode('.', $pieces));
         });
 
-        $rows = $this->scope($builder)
-            ->orderByRaw('FIELD(' . $key . ', ' . $ids->implode(',') . ')')
-            ->whereIn($key, $ids)
-            ->get();
+        if ($ids->count() > 0) {
+            $builder->whereIn($key, $ids)
+                ->orderByRaw('FIELD(' . $key . ', ' . $ids->implode(',') . ')');
+        } else {
+            $builder->whereRaw('1 = 0');
+        }
+
+        $rows = $builder->get();
 
         $rows = $rows->map(function($row) use ($model, $fields, $related, $location, $buttons) {
             $new = [];
