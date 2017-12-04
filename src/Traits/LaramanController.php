@@ -259,9 +259,15 @@ trait LaramanController
 
         //  running a search
         if (!empty($search) && $this->searchEnabled) {
-            $results = $model::search($search)->take($model::count())->get();
+            $searchBuilder = $model::search($search);
 
-            $ids = $results->pluck('id')->toArray();
+            if (is_array($searchBuilder)) {
+                $ids = array_pluck($searchBuilder['hits'], 'id');
+            } else {
+                $results = $searchBuilder->take($model::count())->get();
+
+                $ids = $results->pluck('id')->toArray();
+            }
 
             $builder->whereIn($builder->getModel()->getTable() . '.id', $ids);
 
