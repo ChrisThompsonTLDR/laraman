@@ -62,7 +62,7 @@ Think of these as post-accessors.  This allows Laraman to manipulate model data 
 Example of using the date formatter
 
 ```
-public function __construct()
+public function __configure()
 {
     $this->columns = [
         [
