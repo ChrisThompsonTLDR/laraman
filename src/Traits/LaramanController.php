@@ -48,6 +48,8 @@ trait LaramanController
 
     private function startup()
     {
+        $this->__configure();
+
         if (empty($this->model)) {
             $this->model = 'App\\' . str_singular(str_replace('Controller', '', class_basename($this)));
         }
