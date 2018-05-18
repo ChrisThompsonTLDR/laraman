@@ -275,7 +275,7 @@ trait LaramanController
 
             //  search sorted results
             if (!$request->has('sort') && count($ids) > 0) {
-                $builder->orderByRaw(DB::raw('FIELD(' . $builder->getModel()->getTable() . '.id, ' . implode(', ', $ids)) . ') asc');
+                $builder->orderByRaw(DB::raw('FIELD(' . $builder->getConnection()->getTablePrefix() . $builder->getModel()->getTable() . '.id, ' . implode(', ', $ids)) . ') asc');
 
                 $sort = null;
             }
