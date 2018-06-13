@@ -87,7 +87,13 @@
                     @foreach ($rows as $row)
                         <tr>
                             @foreach ($columns as $column)
-                            <td>{!! $row->{$column->field} or '' !!}</td>
+                            <td>
+                                @if (empty($column->options['blade']))
+                                    {!! $row->{$column->field} or '' !!}
+                                @else
+                                    @include($column->options['blade'])
+                                @endif
+                            </td>
                             @endforeach
                             @if ($buttons->count() > 0)
                             <td>
