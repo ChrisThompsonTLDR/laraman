@@ -304,8 +304,8 @@ trait LaramanController
                 if (str_contains($sort, '.')) {
                     $relateIt = explode('.', $sort);
 
-                    if ($row->{$relateIt[0]}) {
-                        $record['_laraman_sort'] = $row->$relateIt[0]->$relateIt[1];
+                    if (count($relateIt) > 1) {
+                        $record['_laraman_sort'] = $row->{$relateIt[0]}->{$relateIt[1]};
                     }
                 } else {
                     $record['_laraman_sort'] = $row->{$sort};
