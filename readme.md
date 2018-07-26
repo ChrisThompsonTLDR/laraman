@@ -1,6 +1,8 @@
 # Laraman - Laravel Data Manager
 
-Laraman is a Laravel based package designed to help being able review data quickly.
+Laraman is a Laravel based administration panel.
+
+Laraman provides a quick user interface for reviewing and managing data stored in your database.
 
 Laraman is really good at the index route, searching, filtering and pagination.  It leaves the create, update and delete to the application.
 
@@ -89,10 +91,10 @@ and then use it
 use LaramanController;
 ```
 
-Laraman expects your controller to have a `__construct()` method where a few things are configured.
+Laraman expects your controller to have a `__configure()` method where a few things are configured.
 
 ```
-public function __construct()
+public function __configure()
 {
     $this->columns = [
         [
@@ -125,7 +127,7 @@ This example will build an index route with a table with 4 columns and 1 button.
 If the model name you want to use doesn't make the naming convention you used for your controller, it can be set with the model attribute
 
 ```
-    public function __construct()
+    public function __configure()
     {
         $this->model = \App\Mail::class;
 ```
@@ -135,7 +137,7 @@ If the model name you want to use doesn't make the naming convention you used fo
 Need to load views from another path, use the `viewPath` attribute
 
 ```
-    public function __construct()
+    public function __configure()
     {
         $this->viewPath = config('laraman.view.hintpath') . '::mail';
 ```
@@ -145,7 +147,7 @@ Need to load views from another path, use the `viewPath` attribute
 The route where laraman lives for this controller can be changed
 
 ```
-    public function __construct()
+    public function __configure()
     {
         $this->routePath = config('laraman.route.prefix') . '.mail';
 ```
@@ -155,7 +157,7 @@ The route where laraman lives for this controller can be changed
 You can enable model level searches with the `searchEnabled` attribute
 
 ```
-public function __construct()
+public function __configure()
 {
     $this->searchEnabled = true;
 ```
@@ -175,7 +177,7 @@ The only required array key for a column is the `field`.  This will be the datab
 The dot notation can be used to reach related model data.
 
 ```
-public function __construct()
+public function __configure()
 {
     $this->columns = [
         [
@@ -201,7 +203,7 @@ public function __construct()
 If you need to use a custom blade for a field, define it like this
 
 ```
-public function __construct()
+public function __configure()
 {
     $this->columns = [
         [
@@ -218,7 +220,7 @@ public function __construct()
 Laraman can have defined filters that users will be able to use
 
 ```
-public function __construct()
+public function __configure()
 {
     $this->filters = [
         [
@@ -248,7 +250,7 @@ public function __construct()
 Action buttons can be added with the `buttons` attribute
 
 ```
-public function __construct()
+public function __configure()
 {
     $this->buttons = [
         'laraman::buttons.braintree-transaction',
@@ -281,7 +283,7 @@ class TrialController extends Controller
 {
     use LaramanController;
 
-    public function __construct()
+    public function __configure()
     {
         $this->columns = [
             [
