@@ -35,8 +35,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         $this->mergeConfigFrom(
             realpath(dirname(__DIR__)) . '/config/laraman.php', 'laraman'
         );
-
-        config(['laraman.route.prefixDot' => config('laraman.route.prefix') . ((empty(config('laraman.route.prefix'))) ?: '.')]);
     }
 
     public static function resource($path, $controller = '', array $options = [])
@@ -46,18 +44,18 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             $controller = str_replace(' ', '', title_case(str_replace('-', ' ', str_singular($path)))) . 'Controller';
         }
 
-        Route::post($path . '/filter', ['as' => config('laraman.route.prefixDot') . $path . '.filter', 'uses' => $controller . '@filter']);
-        Route::post($path . '/search', ['as' => config('laraman.route.prefixDot') . $path . '.search', 'uses' => $controller . '@search']);
+        Route::post($path . '/filter', ['as' => $path . '.filter', 'uses' => $controller . '@filter']);
+        Route::post($path . '/search', ['as' => $path . '.search', 'uses' => $controller . '@search']);
 
         $options = array_merge([
             'names' => [
-                'index'     => config('laraman.route.prefixDot') . $path . '.index',
-                'create'    => config('laraman.route.prefixDot') . $path . '.create',
-                'store'     => config('laraman.route.prefixDot') . $path . '.store',
-                'edit'      => config('laraman.route.prefixDot') . $path . '.edit',
-                'update'    => config('laraman.route.prefixDot') . $path . '.update',
-                'show'      => config('laraman.route.prefixDot') . $path . '.show',
-                'destroy'   => config('laraman.route.prefixDot') . $path . '.destroy',
+                'index'     => $path . '.index',
+                'create'    => $path . '.create',
+                'store'     => $path . '.store',
+                'edit'      => $path . '.edit',
+                'update'    => $path . '.update',
+                'show'      => $path . '.show',
+                'destroy'   => $path . '.destroy',
             ],
             ], $options);
 

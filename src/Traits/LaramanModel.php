@@ -86,6 +86,6 @@ trait LaramanModel
 
         list($model, $parts) = explode('.', $column['field']);
 
-        return '<a href="' . route(config('laraman.route.prefixDot') . str_plural($model) . '.show', array_get($row, $model . '.id')) . '">' . e($value) . '</a>';
+        return '<a href="' . route(config('laraman.route.as') . str_plural($model) . '.show', array_get($row, $model . '.id')) . '">' . e($value) . '</a>';
     }
 }

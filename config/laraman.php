@@ -5,6 +5,7 @@ return [
         'middleware' => ['web'],
         'namespace'  => 'Manage',
         'prefix'     => 'manage',
+        'as'         => 'manage.',
     ],
     'view' => [
         'hintpath'  => 'laraman',
