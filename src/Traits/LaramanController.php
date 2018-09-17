@@ -19,6 +19,8 @@ trait LaramanController
     //  default sort direction
     public $order = 'desc';
 
+    private $dbSortable = false;
+
     //  the page
     public $page = 1;
 
@@ -146,6 +148,11 @@ trait LaramanController
         $search = $request->input('search');
 
         $builder = $model::query();
+
+        //  can the database handle sorting
+        if (in_array($sort, Schema::getColumnListing($builder->getModel()->getTable()))) {
+            $this->dbSortable = true;
+        }
 
         //  scope it from the controller
         $builder = $this->scope($builder);
@@ -279,70 +286,91 @@ trait LaramanController
 
                 $sort = null;
             }
+        } else {
+            if ($this->dbSortable) {
+                $builder->orderBy($sort, $order);
+            }
         }
 
         //  build a faker paginator
         $paginator = $builder->paginate($limit);
 
-        $key = $builder->getModel()->getKeyName();
+        if ($this->dbSortable) {
+            $rows = collect($paginator->items());
+        }
+        //  only run this if the db wasn't able to sort the records
+        else {
+            $key = $builder->getModel()->getKeyName();
 
-        //  chunk the results and get just the data we need
-        $tmpRows = collect([]);
+            //  chunk the results and get just the data we need
+            $tmpRows = collect([]);
 
-        $builder->chunk($this->chunk, function ($rows) use (&$tmpRows, $key, $sort, $counts, $related) {
-            foreach ($rows as $row) {
-                $record = [];
-                $record[$key] = $row->{$key};
-
+            $builder->chunk($this->chunk, function ($rows) use (&$tmpRows, $key, $sort, $counts, $related) {
                 //  sort is on a `count` formatter field
+                $countSort = false;
                 if ($counts->contains($sort)) {
-                    $record[$sort . 'Count'] = $row->{$sort}->count();
+                    $countSort = true;
                 }
 
-                $record['_laraman_sort'] = null;
-
+                $containsSort = false;
                 if (str_contains($sort, '.')) {
-                    $relateIt = explode('.', $sort);
-
-                    if (count($relateIt) > 1) {
-                        $record['_laraman_sort'] = $row->{$relateIt[0]}->{$relateIt[1]};
-                    }
-                } else {
-                    $record['_laraman_sort'] = $row->{$sort};
+                    $containsSort = true;
                 }
 
-                $tmpRows->push($record);
+                foreach ($rows as $row) {
+                    $record = [];
+                    $record[$key] = $row->{$key};
+
+                    //  sort is on a `count` formatter field
+                    if ($countSort) {
+                        $record[$sort . 'Count'] = $row->{$sort}->count();
+                    }
+
+                    $record['_laraman_sort'] = null;
+
+                    if ($containsSort) {
+                        $relateIt = explode('.', $sort);
+
+                        if (count($relateIt) > 1 && isset($row->{$relateIt[0]}->{$relateIt[1]})) {
+                            $record['_laraman_sort'] = $row->{$relateIt[0]}->{$relateIt[1]};
+                        }
+                    } else {
+                        $record['_laraman_sort'] = $row->{$sort};
+                    }
+
+                    $tmpRows->push($record);
+                }
+            });
+
+            //  sort them only if not searching
+            if ($sort) {
+                $sortMethod = 'sortBy' . (($order == 'desc') ? 'Desc' : '');
+                $tmpRows = $tmpRows->$sortMethod('_laraman_sort', SORT_NATURAL|SORT_FLAG_CASE);
             }
-        });
 
-        //  sort them only if not searching
-        if ($sort) {
-            $sortMethod = 'sortBy' . (($order == 'desc') ? 'Desc' : '');
-            $tmpRows = $tmpRows->$sortMethod('_laraman_sort', SORT_NATURAL|SORT_FLAG_CASE);
+            //  slice them
+            $ids = $tmpRows->slice($offset, $limit)->pluck($key);
+
+
+            //  start a new builder for the real query
+            $builder = $model::query();
+
+            //  eager load
+            $related->each(function ($row) use ($builder) {
+                $pieces = array_slice(explode('.', $row['field']), 0, -1);
+
+                $builder->with(implode('.', $pieces));
+            });
+
+            if ($ids->count() > 0) {
+                $builder->whereIn($key, $ids)
+                    ->orderByRaw('FIELD(' . $key . ', ' . $ids->implode(',') . ')');
+            } else {
+                $builder->whereRaw('1 = 0');
+            }
+
+            $rows = $builder->get();
         }
-
-        //  slice them
-        $ids = $tmpRows->slice($offset, $limit)->pluck($key);
-
-
-        //  start a new builder for the real query
-        $builder = $model::query();
-
-        //  eager load
-        $related->each(function ($row) use ($builder) {
-            $pieces = array_slice(explode('.', $row['field']), 0, -1);
-
-            $builder->with(implode('.', $pieces));
-        });
-
-        if ($ids->count() > 0) {
-            $builder->whereIn($key, $ids)
-                ->orderByRaw('FIELD(' . $key . ', ' . $ids->implode(',') . ')');
-        } else {
-            $builder->whereRaw('1 = 0');
-        }
-
-        $rows = $builder->get();
 
         $rows = $rows->map(function($row) use ($model, $fields, $related, $location, $buttons) {
             $new = [];
