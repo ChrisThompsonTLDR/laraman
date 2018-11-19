@@ -3,6 +3,8 @@
 @section('content')
 @includeIf($header)
 <div class="container-fluid">
+
+    @if ($searchEnabled || !$filters->isEmpty())
     <div id="toolbar" class="row">
         <div class="col col-xs-12">
             @if ($searchEnabled)
@@ -48,6 +50,7 @@
         </div>
     </div>
     <hr>
+    @endif
     <div class="row">
         <div class="col col-xs-12">
             @if (!$rows->isEmpty())
