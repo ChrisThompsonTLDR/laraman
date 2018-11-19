@@ -92,7 +92,7 @@
                             @foreach ($columns as $column)
                             <td>
                                 @if (empty($column->options['blade']))
-                                    {!! $row->{$column->field} or '' !!}
+                                    {!! optional($row)->{$column->field} !!}
                                 @else
                                     @include($column->options['blade'])
                                 @endif
