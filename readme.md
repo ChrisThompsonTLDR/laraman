@@ -217,7 +217,7 @@ public function __configure()
 
 ### Filters
 
-Laraman can have defined filters that users will be able to use
+Laraman can utilize filters defined on the model
 
 ```
 public function __configure()
@@ -238,12 +238,20 @@ public function __configure()
                 'spam' => 'spam',
             ]
         ],
-        [
-            'field' => 'to',
-            'type' => 'input',
-        ],
     ];
 ```
+
+If the model has a `filterEvent` defined, it will be utilized
+
+```
+
+    public function filterEvent($builder, $val)
+    {
+        return $builder->{$val}();
+    }
+```
+
+Could be used to apply model scopes like `scopeSend()` and `scopeOpen()`.
 
 ### Buttons
 

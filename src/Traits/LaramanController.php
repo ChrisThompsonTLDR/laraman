@@ -253,9 +253,11 @@ trait LaramanController
             }
         }
         $related->each(function ($row) use ($builder) {
-            $pieces = array_slice(explode('.', $row['field']), 0, -1);
+            if (!method_exists($builder->getModel(), 'filter' . studly_case($row['field']))) {
+                $pieces = array_slice(explode('.', $row['field']), 0, -1);
 
-            $builder->with(implode('.', $pieces));
+                $builder->with(implode('.', $pieces));
+            }
         });
 
         //  related model, laraman has to do the heavy lifting
