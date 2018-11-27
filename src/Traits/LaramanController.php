@@ -503,8 +503,8 @@ trait LaramanController
 
         $currentModel = new $model;
 
-        $prev = $model::whereRaw('id = (select max(id) from ' . $currentModel->getTable() . ' where id < ' . $row->id . ')')->first();
-        $next = $model::whereRaw('id = (select min(id) from ' . $currentModel->getTable() . ' where id > ' . $row->id . ')')->first();
+        $prev = $model::whereRaw('id = (select max(id) from ' . $currentModel->getConnection()->getTablePrefix() . $currentModel->getTable() . ' where id < ' . $row->id . ')')->first();
+        $next = $model::whereRaw('id = (select min(id) from ' . $currentModel->getConnection()->getTablePrefix() . $currentModel->getTable() . ' where id > ' . $row->id . ')')->first();
 
         //  custom blade available
         $blade = $this->viewPath . '.show';
@@ -654,7 +654,9 @@ trait LaramanController
             $related[$relatedNamespace]['json'] = json_encode($json);
         }
 
-        return view($blade, compact('row', 'next', 'prev', 'location', 'related'));
+        $viewPath = $this->viewPath;
+
+        return view($blade, compact('row', 'next', 'prev', 'location', 'related', 'viewPath'));
     }
 
     public function destroy($id)
