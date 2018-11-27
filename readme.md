@@ -41,7 +41,7 @@ Laraman::resource('users');
 
 Laraman will now look for a `app/Http/Controllers/Manage/UserController.php`.
 
-The namespace of the Laraman controllers can be changed in the `config/laramna.php` file.  `Manage` is the default namespace.
+The namespace of the Laraman controllers can be changed in the `config/laraman.php` file.  `Manage` is the default namespace.
 
 ## Models
 
