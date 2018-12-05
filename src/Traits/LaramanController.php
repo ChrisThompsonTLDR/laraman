@@ -58,13 +58,7 @@ trait LaramanController
 
         //  turn on/off searching
         if (is_null($this->searchEnabled)) {
-            $traits = class_uses($this->model);
-
-            if (in_array('Laravel\Scout\Searchable', $traits)) {
-                $this->searchEnabled = true;
-            } else {
-                $this->searchEnabled = false;
-            }
+            $this->searchEnabled = method_exists($this->model, 'search');
         }
 
         if (is_null($this->viewPath)) {
