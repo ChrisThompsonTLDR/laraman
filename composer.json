@@ -22,7 +22,7 @@
     "license": "MIT",
     "type": "project",
     "require": {
-        "laravelcollective/html": "^5.3.0"
+        "laravelcollective/html": "^6.0"
     },
     "extra": {
         "laravel": {
