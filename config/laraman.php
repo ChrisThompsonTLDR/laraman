@@ -13,4 +13,5 @@ return [
         'icon_down' => 'fa fa-chevron-down',
     ],
     'limit' => 50,
+    'model_path' => 'App\\Models\\'
 ];

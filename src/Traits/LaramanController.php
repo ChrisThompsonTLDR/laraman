@@ -42,6 +42,8 @@ trait LaramanController
 
     public $routePath;
 
+    public $modelPath;
+
     public $chunk = 1000;
 
     //  holds extras that will be passed from
@@ -53,7 +55,7 @@ trait LaramanController
         $this->__configure();
 
         if (empty($this->model)) {
-            $this->model = 'App\\' . str_singular(str_replace('Controller', '', class_basename($this)));
+            $this->model = config('laraman.model_path') . str_singular(str_replace('Controller', '', class_basename($this)));
         }
 
         //  turn on/off searching
