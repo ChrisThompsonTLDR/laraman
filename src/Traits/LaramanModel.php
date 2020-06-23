@@ -3,9 +3,10 @@
 namespace Christhompsontldr\Laraman\Traits;
 
 use Carbon\Carbon;
-use Schema;
 use DB;
-use Illuminate\Database\Query\Expression;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use Schema;
 
 trait LaramanModel
 {
@@ -32,16 +33,7 @@ trait LaramanModel
     */
     public static function formatterCount($params)
     {
-        $value   = isset($params['value']) ? $params['value'] : null;
-        $column  = isset($params['column']) ? $params['column'] : null;
-        $row     = isset($params['row']) ? $params['row'] : null;
-        $options = isset($params['options']) ? $params['options'] : null;
-
-        if ($row->{$column['field']}) {
-            return $row->{$column['field']}->count();
-        }
-
-        return 0;
+        return $params['value'];
     }
 
     public static function formatterDatetime($params)
@@ -86,6 +78,6 @@ trait LaramanModel
 
         list($model, $parts) = explode('.', $column['field']);
 
-        return '<a href="' . route(config('laraman.route.prefixDot') . str_plural($model) . '.show', array_get($row, $model . '.id')) . '">' . e($value) . '</a>';
+        return '<a href="' . route(config('laraman.route.prefixDot') . Str::plural($model) . '.show', Arr::get($row, $model . '.id')) . '">' . e($value) . '</a>';
     }
 }

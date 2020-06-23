@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use DB;
 use Illuminate\Support\Facades\View;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Schema;
 
 trait LaramanController
@@ -55,7 +57,7 @@ trait LaramanController
         $this->__configure();
 
         if (empty($this->model)) {
-            $this->model = config('laraman.model_path') . str_singular(str_replace('Controller', '', class_basename($this)));
+            $this->model = config('laraman.model_path') . Str::of(class_basename($this))->replace('Controller', '')->singular();
         }
 
         //  turn on/off searching
@@ -64,11 +66,11 @@ trait LaramanController
         }
 
         if (is_null($this->viewPath)) {
-            $this->viewPath = config('laraman.view.hintpath') . '::' . strtolower(str_plural(class_basename($this->model)));
+            $this->viewPath = config('laraman.view.hintpath') . '::' . strtolower(Str::plural(class_basename($this->model)));
         }
 
         if (is_null($this->routePath)) {
-            $this->routePath = config('laraman.route.prefix') . '.' . strtolower(str_plural(class_basename($this->model)));
+            $this->routePath = config('laraman.route.prefix') . '.' . strtolower(Str::plural(class_basename($this->model)));
 //            $this->routePath = str_replace('.index', '', Route::currentRouteName());
         }
 
@@ -124,12 +126,12 @@ trait LaramanController
 
         //  get the related model fields
         $related = $columns->filter(function ($column) {
-            return str_contains($column['field'], '.');
+            return Str::of($column['field'])->contains('.');
         });
 
         //  remove related fields
         $fields = $columns->filter(function ($column) {
-            return !str_contains($column['field'], '.');
+            return !Str::of($column['field'])->contains('.');
         });
 
         //  count fields to eager load
@@ -164,7 +166,7 @@ trait LaramanController
             //  we need a join
             $relation = false;
 
-            if (str_contains($key, '.')) {
+            if (Str::of($key)->contains('.')) {
                 $relation = true;
 
                 list($relatedModel, $rest) = explode('.', $key);
@@ -177,11 +179,11 @@ trait LaramanController
                 //  this model
                 if (!$relation) {
                     //  custom model filter
-                    if (method_exists($builder->getModel(), 'filter' . studly_case($key))) {
-                        $builder = $builder->getModel()->{'filter' . studly_case($key)}($builder, $val);
+                    if (method_exists($builder->getModel(), 'filter' . Str::of($key)->studly())) {
+                        $builder = $builder->getModel()->{'filter' . Str::of($key)->studly()}($builder, $val);
                     }
                     //  ranges
-                    elseif (str_contains($val, ':')) {
+                    elseif (Str::of($val)->contains(':')) {
                         list($start, $end) = explode(':', $val);
 
                         $start = urldecode($start);
@@ -207,11 +209,11 @@ trait LaramanController
                 //  related model
                 else {
                     $builder->whereHas($relatedModel, function ($query) use ($rest, $val, $filter, &$appliedFilters) {
-                        if (method_exists($query->getModel(), 'filter' . studly_case($rest))) {
-                            $query->{'filter' . studly_case($rest)}($query, $val);
+                        if (method_exists($query->getModel(), 'filter' . Str::of($rest)->studly())) {
+                            $query->{'filter' . Str::of($rest)->studly()}($query, $val);
                         }
                         //  ranges
-                        elseif (str_contains($val, ':')) {
+                        elseif (Str::of($val)->contains(':')) {
                             list($start, $end) = explode(':', $val);
 
                             $start = urldecode($start);
@@ -245,11 +247,15 @@ trait LaramanController
         //  eager load
         foreach ($counts as $count) {
             if (method_exists($tmpModel, $count)) {
-                $builder->with($count);
+                $builder->withCount($count);
+
+                if ($sort === $count) {
+                    $this->dbSortable = true;
+                }
             }
         }
         $related->each(function ($row) use ($builder) {
-            if (!method_exists($builder->getModel(), 'filter' . studly_case($row['field']))) {
+            if (!method_exists($builder->getModel(), 'filter' . Str::of($row['field'])->studly())) {
                 $pieces = array_slice(explode('.', $row['field']), 0, -1);
 
                 $builder->with(implode('.', $pieces));
@@ -257,11 +263,10 @@ trait LaramanController
         });
 
         //  related model, laraman has to do the heavy lifting
-        if (str_contains($sort, '.')) {
+        if (Str::of($sort)->contains('.')) {
             list($relatedModel, $rest) = explode('.', $sort);
 
             $builder->with($relatedModel);
-
         }
 
         //  running a search
@@ -269,7 +274,7 @@ trait LaramanController
             $searchBuilder = $model::search($search);
 
             if (is_array($searchBuilder)) {
-                $ids = array_pluck($searchBuilder['hits'], 'id');
+                $ids = Arr::pluck($searchBuilder['hits'], 'id');
             } else {
                 $results = $searchBuilder->take($model::count())->get();
 
@@ -286,7 +291,12 @@ trait LaramanController
             }
         } else {
             if ($this->dbSortable) {
-                $builder->orderBy($sort, $order);
+                $sortKey = $sort;
+                // count sort
+                if ($counts->contains($sort)) {
+                    $sortKey = $sort . '_count';
+                }
+                $builder->orderBy($sortKey, $order);
             }
         }
 
@@ -304,25 +314,14 @@ trait LaramanController
             $tmpRows = collect([]);
 
             $builder->chunk($this->chunk, function ($rows) use (&$tmpRows, $key, $sort, $counts, $related) {
-                //  sort is on a `count` formatter field
-                $countSort = false;
-                if ($counts->contains($sort)) {
-                    $countSort = true;
-                }
-
                 $containsSort = false;
-                if (str_contains($sort, '.')) {
+                if (Str::of($sort)->contains('.')) {
                     $containsSort = true;
                 }
 
                 foreach ($rows as $row) {
                     $record = [];
                     $record[$key] = $row->{$key};
-
-                    //  sort is on a `count` formatter field
-                    if ($countSort) {
-                        $record[$sort . 'Count'] = $row->{$sort}->count();
-                    }
 
                     $record['_laraman_sort'] = null;
 
@@ -370,17 +369,26 @@ trait LaramanController
             $rows = $builder->get();
         }
 
-        $rows = $rows->map(function($row) use ($model, $fields, $related, $location, $buttons) {
+        $rows = $rows->map(function($row) use ($model, $fields, $related, $location, $buttons, $counts) {
             $new = [];
 
             //  run the formatters
-            $fields->each(function ($column) use (&$new, $row, $model) {
+            $fields->each(function ($column) use (&$new, $row, $model, $counts) {
+                if (empty($column['formatter'])) {
+                    $new[$column['field']] = $row->{$column['field']};
+                }
                 //  this will run the row through the accessors
-                $new[$column['field']] = $row->{$column['field']};
+                else {
+                    $value = null;
+                    if($counts->contains($column['field'])) {
+                        $value = $row->{$column['field'] . '_count'};
+                    }
+                    elseif (isset($row->{$column['field']})) {
+                        $value = $row->{$column['field']};
+                    }
 
-                if (!empty($column['formatter'])) {
                     $params = [
-                        'value'   => $new[$column['field']],
+                        'value'   => $value,
                         'column'  => $column,
                         'row'     => $row,
                         'options' => isset($column['options']) ? $column['options'] : []
@@ -388,7 +396,7 @@ trait LaramanController
 
                     //  formatter is a string
                     if (is_string($column['formatter'])) {
-                        $new[$column['field']] = $model::{'formatter' . title_case($column['formatter'])}($params);
+                        $new[$column['field']] = $model::{'formatter' . Str::of($column['formatter'])->title()}($params);
                     }
                     // formatter is function
                     else {
@@ -400,10 +408,10 @@ trait LaramanController
             //  related model fields
             $related->each(function ($column) use (&$new, $row, $model) {
                 //  this will run the row through the accessors
-                $new[$column['field']] = array_get($row, $column['field']);
+                $new[$column['field']] = Arr::get($row, $column['field']);
 
                 if (!empty($column['formatter'])) {
-                    $new[$column['field']] = $model::{'formatter' . title_case($column['formatter'])}([
+                    $new[$column['field']] = $model::{'formatter' . Str::of($column['formatter'])->title()}([
                         'value'   => $new[$column['field']],
                         'column'  => $column,
                         'row'     => $row,
@@ -428,7 +436,7 @@ trait LaramanController
                 if ($column->field == 'id') {
                     $column->display = 'ID';
                 } else {
-                    $column->display = title_case($column->display);
+                    $column->display = Str::of($column->display)->title();
                 }
             }
 
@@ -446,7 +454,7 @@ trait LaramanController
                 if ($filter->field == 'id') {
                     $filter->display = 'ID';
                 } else {
-                    $filter->display = title_case($filter->field);
+                    $filter->display = Str::of($filter->field)->title();
                 }
             }
 
@@ -461,7 +469,6 @@ trait LaramanController
         if (empty($this->view)) {
             $this->view = config('laraman.view.hintpath') . '::index';
         }
-
         return view($this->view, [
             'paginator'     => $paginator,
             'rows'          => collect($rows),
@@ -481,7 +488,7 @@ trait LaramanController
     }
 
     /**
-     * Show for the recordr
+     * Show for the record
      *
      * @param integer $id
      */
@@ -524,7 +531,7 @@ trait LaramanController
                     $column = ['field' => $column];
                 }
 
-                return str_contains($column['field'], '.');
+                return Str::of($column['field'])->contains('.');
             });
 
             //  remove related fields
@@ -533,7 +540,7 @@ trait LaramanController
                     $column = ['field' => $column];
                 }
 
-                return !str_contains($column['field'], '.');
+                return !Str::of($column['field'])->contains('.');
             });
 
             $buttons = collect(isset($set['buttons']) && is_array($set['buttons']) ? $set['buttons'] : []);
@@ -561,7 +568,7 @@ trait LaramanController
 
                         //  formatter is a string
                         if (is_string($column['formatter'])) {
-                            $new[$column['field']] = $model::{'formatter' . title_case($column['formatter'])}($params);
+                            $new[$column['field']] = $model::{'formatter' . Str::of($column['formatter'])->title()}($params);
                         }
                         // formatter is function
                         else {
@@ -573,10 +580,10 @@ trait LaramanController
                 //  related model fields
                 $relatedFields->each(function ($column) use (&$new, $relatedRow, $model) {
                     //  this will run the row through the accessors
-                    $new[$column['field']] = array_get($relatedRow, $column['field']);
+                    $new[$column['field']] = Arr::get($relatedRow, $column['field']);
 
                     if (!empty($column['formatter'])) {
-                        $new[$column['field']] = $model::{'formatter' . title_case($column['formatter'])}([
+                        $new[$column['field']] = $model::{'formatter' . Str::of($column['formatter'])->title()}([
                             'value'   => $new[$column['field']],
                             'column'  => $column,
                             'row'     => $relatedRow,
@@ -626,7 +633,7 @@ trait LaramanController
                     if ($column->field == 'id') {
                         $column->display = 'ID';
                     } else {
-                        $column->display = title_case($column->field);
+                        $column->display = Str::of($column->field)->title();
                     }
                 }
 

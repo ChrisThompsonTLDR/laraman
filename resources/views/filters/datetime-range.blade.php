@@ -1,5 +1,5 @@
 <div class="form-group filter">
-    <div id="filter{{ title_case($filter->field) }}">
+    <div id="filter{{ Str::of($filter->field)->title() }}">
         @if(!isset($filter->label) || $filter->label === true)<div><strong>{!! $filter->display !!}</strong></div>@endif
         {!! Form::text('filter_' . $filter->field . '_start', isset($params['filter_' . $filter->field . '_start']) ? $params['filter_' . $filter->field . '_start'] : null, ['class' => 'form-control']) !!}
         to

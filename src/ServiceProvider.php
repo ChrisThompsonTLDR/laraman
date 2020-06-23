@@ -4,6 +4,7 @@ namespace Christhompsontldr\Laraman;
 
 use Route;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Str;
 
 class ServiceProvider extends \Illuminate\Support\ServiceProvider
 {
@@ -43,7 +44,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         //  auto build controller name
         if (empty($controller)) {
-            $controller = str_replace(' ', '', \Str::title(str_replace('-', ' ', \Str::singular($path)))) . 'Controller';
+            $controller = str_replace(' ', '', Str::title(str_replace('-', ' ', Str::singular($path)))) . 'Controller';
         }
 
         Route::post($path . '/filter', ['as' => config('laraman.route.prefixDot') . $path . '.filter', 'uses' => $controller . '@filter']);
