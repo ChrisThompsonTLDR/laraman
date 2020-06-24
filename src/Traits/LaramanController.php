@@ -126,7 +126,7 @@ trait LaramanController
 
         //  get the related model fields
         $related = $columns->filter(function ($column) {
-            return Str::conatains($column['field'], '.');
+            return Str::contains($column['field'], '.');
         });
 
         //  remove related fields
