@@ -57,7 +57,7 @@ trait LaramanController
         $this->__configure();
 
         if (empty($this->model)) {
-            $this->model = config('laraman.model_path') . Str::of(class_basename($this))->replace('Controller', '')->singular();
+            $this->model = config('laraman.model_path') . Str::singular(str_replace('Controller', '', class_basename($this)));
         }
 
         //  turn on/off searching
@@ -126,12 +126,12 @@ trait LaramanController
 
         //  get the related model fields
         $related = $columns->filter(function ($column) {
-            return Str::of($column['field'])->contains('.');
+            return Str::contains($column['field'], '.');
         });
 
         //  remove related fields
         $fields = $columns->filter(function ($column) {
-            return !Str::of($column['field'])->contains('.');
+            return !Str::contains($column['field'], '.');
         });
 
         //  count fields to eager load
@@ -166,7 +166,7 @@ trait LaramanController
             //  we need a join
             $relation = false;
 
-            if (Str::of($key)->contains('.')) {
+            if (Str::contains($key, '.')) {
                 $relation = true;
 
                 list($relatedModel, $rest) = explode('.', $key);
@@ -179,11 +179,11 @@ trait LaramanController
                 //  this model
                 if (!$relation) {
                     //  custom model filter
-                    if (method_exists($builder->getModel(), 'filter' . Str::of($key)->studly())) {
-                        $builder = $builder->getModel()->{'filter' . Str::of($key)->studly()}($builder, $val);
+                    if (method_exists($builder->getModel(), 'filter' . Str::studly($key))) {
+                        $builder = $builder->getModel()->{'filter' . Str::studly($key)}($builder, $val);
                     }
                     //  ranges
-                    elseif (Str::of($val)->contains(':')) {
+                    elseif (Str::contains($val, ':')) {
                         list($start, $end) = explode(':', $val);
 
                         $start = urldecode($start);
@@ -209,11 +209,11 @@ trait LaramanController
                 //  related model
                 else {
                     $builder->whereHas($relatedModel, function ($query) use ($rest, $val, $filter, &$appliedFilters) {
-                        if (method_exists($query->getModel(), 'filter' . Str::of($rest)->studly())) {
-                            $query->{'filter' . Str::of($rest)->studly()}($query, $val);
+                        if (method_exists($query->getModel(), 'filter' . Str::studly($rest))) {
+                            $query->{'filter' . Str::studly($rest)}($query, $val);
                         }
                         //  ranges
-                        elseif (Str::of($val)->contains(':')) {
+                        elseif (Str::contains($val, '.')) {
                             list($start, $end) = explode(':', $val);
 
                             $start = urldecode($start);
@@ -255,7 +255,7 @@ trait LaramanController
             }
         }
         $related->each(function ($row) use ($builder) {
-            if (!method_exists($builder->getModel(), 'filter' . Str::of($row['field'])->studly())) {
+            if (!method_exists($builder->getModel(), 'filter' . Str::studly($row['field']))) {
                 $pieces = array_slice(explode('.', $row['field']), 0, -1);
 
                 $builder->with(implode('.', $pieces));
@@ -263,7 +263,7 @@ trait LaramanController
         });
 
         //  related model, laraman has to do the heavy lifting
-        if (Str::of($sort)->contains('.')) {
+        if (Str::contains($sort, '.')) {
             list($relatedModel, $rest) = explode('.', $sort);
 
             $builder->with($relatedModel);
@@ -315,7 +315,7 @@ trait LaramanController
 
             $builder->chunk($this->chunk, function ($rows) use (&$tmpRows, $key, $sort, $counts, $related) {
                 $containsSort = false;
-                if (Str::of($sort)->contains('.')) {
+                if (Str::contains($sort, '.')) {
                     $containsSort = true;
                 }
 
@@ -396,7 +396,7 @@ trait LaramanController
 
                     //  formatter is a string
                     if (is_string($column['formatter'])) {
-                        $new[$column['field']] = $model::{'formatter' . Str::of($column['formatter'])->title()}($params);
+                        $new[$column['field']] = $model::{'formatter' . Str::title($column['formatter'])}($params);
                     }
                     // formatter is function
                     else {
@@ -411,7 +411,7 @@ trait LaramanController
                 $new[$column['field']] = Arr::get($row, $column['field']);
 
                 if (!empty($column['formatter'])) {
-                    $new[$column['field']] = $model::{'formatter' . Str::of($column['formatter'])->title()}([
+                    $new[$column['field']] = $model::{'formatter' . Str::title($column['formatter'])}([
                         'value'   => $new[$column['field']],
                         'column'  => $column,
                         'row'     => $row,
@@ -436,7 +436,7 @@ trait LaramanController
                 if ($column->field == 'id') {
                     $column->display = 'ID';
                 } else {
-                    $column->display = Str::of($column->display)->title();
+                    $column->display = Str::title($column->display);
                 }
             }
 
@@ -454,7 +454,7 @@ trait LaramanController
                 if ($filter->field == 'id') {
                     $filter->display = 'ID';
                 } else {
-                    $filter->display = Str::of($filter->field)->title();
+                    $filter->display = Str::title($filter->field);
                 }
             }
 
@@ -531,7 +531,7 @@ trait LaramanController
                     $column = ['field' => $column];
                 }
 
-                return Str::of($column['field'])->contains('.');
+                return Str::contains($column['field'], '.');
             });
 
             //  remove related fields
@@ -540,7 +540,7 @@ trait LaramanController
                     $column = ['field' => $column];
                 }
 
-                return !Str::of($column['field'])->contains('.');
+                return !Str::contains($column['field'], '.');
             });
 
             $buttons = collect(isset($set['buttons']) && is_array($set['buttons']) ? $set['buttons'] : []);
@@ -568,7 +568,7 @@ trait LaramanController
 
                         //  formatter is a string
                         if (is_string($column['formatter'])) {
-                            $new[$column['field']] = $model::{'formatter' . Str::of($column['formatter'])->title()}($params);
+                            $new[$column['field']] = $model::{'formatter' . Str::title($column['formatter'])}($params);
                         }
                         // formatter is function
                         else {
@@ -583,7 +583,7 @@ trait LaramanController
                     $new[$column['field']] = Arr::get($relatedRow, $column['field']);
 
                     if (!empty($column['formatter'])) {
-                        $new[$column['field']] = $model::{'formatter' . Str::of($column['formatter'])->title()}([
+                        $new[$column['field']] = $model::{'formatter' . Str::title($column['formatter'])}([
                             'value'   => $new[$column['field']],
                             'column'  => $column,
                             'row'     => $relatedRow,
@@ -633,7 +633,7 @@ trait LaramanController
                     if ($column->field == 'id') {
                         $column->display = 'ID';
                     } else {
-                        $column->display = Str::of($column->field)->title();
+                        $column->display = Str::title($column->field);
                     }
                 }
 
