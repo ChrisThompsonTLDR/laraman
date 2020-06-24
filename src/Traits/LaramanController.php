@@ -57,7 +57,7 @@ trait LaramanController
         $this->__configure();
 
         if (empty($this->model)) {
-            $this->model = config('laraman.model_path') . Str::replaceArray('Controller', [''], class_basename($this))->singular();
+            $this->model = config('laraman.model_path') . Str::singular(str_replace('Controller', '', class_basename($this)));
         }
 
         //  turn on/off searching
